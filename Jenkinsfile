@@ -25,7 +25,7 @@ node(){
 
 def buildPushCommit() {
     try {
-        sh './gradlew buildService --profile'
+//        sh './gradlew buildService --profile'
         throw new IOException("Error")
     }  catch(err) {
         currentBuild.result = 'FAILED'
