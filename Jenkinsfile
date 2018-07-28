@@ -31,7 +31,7 @@ def buildPushCommit() {
         currentBuild.result = 'FAILED'
         throw err
     }finally{
-       return  
+//       return
     }
 }
 def testPushCommit() {
