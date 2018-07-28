@@ -12,11 +12,11 @@ node(){
             }
 
             stage('Build') {
-                buildPushCommit()
+                    buildPushCommit()
             }
 
             stage('Test') {
-                testPushCommit()
+                    testPushCommit()
             }
         }
     }
@@ -30,8 +30,6 @@ def buildPushCommit() {
     }  catch(err) {
         currentBuild.result = 'FAILED'
         throw err
-    }finally{
-       return  
     }
 }
 def testPushCommit() {
