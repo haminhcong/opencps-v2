@@ -10,6 +10,8 @@ public class APIDateTimeUtilsTest {
     public void setUp() {
     }
 
+
+    
     @Test
     public void convertNormalDateToLuceneDateTest() {
         String outputDateString = APIDateTimeUtils.convertNormalDateToLuceneDate(null);
