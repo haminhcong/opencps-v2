@@ -37,6 +37,24 @@ def buildPushCommit() {
     sh './gradlew --no-daemon  buildService --profile'
 }
 
+@NonCPS
+def getSubModules() {
+    def currentDir = new File("modules")
+    def moduleList = []
+    currentDir.eachFileRecurse(FileType.DIRECTORIES) { dirName ->
+        if (dirName.name.contains("backend") || dirName.name.contains("frontend") || dirName.name.contains("opencps")) {
+            if (fileExists('file')) {
+                echo "${dirName}"
+                moduleList.add(dirName)
+            } else {
+                echo "No + ${dirName}"
+            }
+        }
+    }
+    return moduleList
+}
+
+
 def testPushCommit() {
     try {
         sh './gradlew --no-daemon  test --profile'
@@ -44,12 +62,33 @@ def testPushCommit() {
         echo "${err}"
         throw err
     } finally {
-        sh './gradlew --no-daemon  aggregateUnitTests --profile'
-        publishHTML([
-                allowMissing: true, alwaysLinkToLastBuild: false,
-                keepAll     : false, reportDir: 'build/unit_test_results',
-                reportFiles : "**.html",
-                reportName  : 'HTML Report', reportTitles: ''
-        ])
+        def modulesList = getSubModules()
+        echo "${modulesList}"
+//        sh './gradlew --no-daemon  aggregateUnitTests --profile'
+//        publishHTML([
+//                allowMissing: true, alwaysLinkToLastBuild: false,
+//                keepAll     : false, reportDir: 'build/unit_test_results',
+//                reportFiles : "**.html",
+//                reportName  : 'HTML Report', reportTitles: ''
+//        ])
     }
 }
+
+//def htmlReports = ""
+//def currentDir = new File("modules")
+//currentDir.eachFileRecurse(FileType.DIRECTORIES) { dirName ->
+//    if (dirName.name.contains("backend") || dirName.name.contains("frontend") || dirName.name.contains("opencps")) {
+//        htmlReports += dirName.name + "/reports/tests/test/index.html"
+//    }
+//}
+//if (htmlReports.length() >= 1) {
+//    htmlReports = htmlReports.substring(0, htmlReports.length() - 1);
+//}
+//echo "${htmlReports}"
+//publishHTML([
+//        allowMissing: true, alwaysLinkToLastBuild: false,
+//        keepAll     : false, reportDir: 'modules',
+//        reportFiles : htmlReports,
+//        reportName  : 'HTML Report', reportTitles: ''
+//])
+//
