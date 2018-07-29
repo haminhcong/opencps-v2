@@ -12,8 +12,7 @@ node() {
                         extensions       : [[$class   : 'CloneOption',
                                              reference: '/home/hieule/conghm-opencps-v2-local/opencps-v2.git',
                                              shallow  : false, timeout: 75]],
-                        userRemoteConfigs: [[credentialsId: 'conghm-github-clone-token',
-                                             url          : 'https://github.com/haminhcong/opencps-v2']]
+                        userRemoteConfigs: scm.userRemoteConfigs
                 ]
             }
             stage('Clean') {
