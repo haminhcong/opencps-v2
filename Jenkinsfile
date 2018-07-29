@@ -20,6 +20,7 @@ node() {
                 sh 'cat  Jenkinsfile'
                 sh 'cat  Jenkinsfile'
                 sh 'cat  Jenkinsfile'
+                sh 'cat  Jenkinsfile'
                 sh './gradlew -v'
                 // Workaround with 'Gradle locks the global script cache' issue
                 sh 'find /home/gradle/.gradle -type f -name "*.lock" | while read f; do rm $f; done'
