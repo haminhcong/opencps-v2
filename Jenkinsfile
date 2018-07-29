@@ -3,13 +3,13 @@ node() {
     docker.image('ntk148v/gradle-git-4.5.1:alpine').withRun('-v $HOME/.m2:/home/gradle/.m2 -v $HOME/.gradle:/home/gradle/.gradle') { c ->
         catchError {
             stage('Checkout') {
-                echo "${env.BRANCH_NAME}"
+//                echo "${env.BRANCH_NAME}"
 //                checkout scm
                 checkout changelog: true, poll: true, scm: [
                         $class           : 'GitSCM',
-                        branches: [[name: "${env.BRANCH_NAME}"]],
-                        doGenerateSubmoduleConfigurations: false,
-                        extensions       : [[$class   : 'CloneOption',
+                        branches: scm.branches,
+                        doGenerateSubmoduleConfigurations: scm.doGenerateSubmoduleConfigurations,
+                        extensions       : [scm.extensions, [$class   : 'CloneOption',
                                              reference: '/home/hieule/conghm-opencps-v2-local/opencps-v2.git',
                                              shallow  : false, timeout: 75]],
                         userRemoteConfigs: [[credentialsId: 'conghm-github-clone-token',
