@@ -17,11 +17,12 @@ node() {
                 ]
             }
             stage('Clean') {
-//                sh 'cat  Jenkinsfile'
+                sh 'cat  Jenkinsfile'
                 sh './gradlew -v'
                 // Workaround with 'Gradle locks the global script cache' issue
                 sh 'find /home/gradle/.gradle -type f -name "*.lock" | while read f; do rm $f; done'
-                sh './gradlew --no-daemon clean --profile'
+//                sh './gradlew --no-daemon clean --profile'
+                sh './gradlew clean --profile'
             }
 
             stage('Build') {
@@ -37,7 +38,8 @@ node() {
 
 
 def buildPushCommit() {
-    sh './gradlew --no-daemon  buildService --profile'
+//    sh './gradlew --no-daemon  buildService --profile'
+    sh './gradlew buildService --profile'
 }
 
 //@NonCPS
@@ -60,7 +62,8 @@ def buildPushCommit() {
 
 def testPushCommit() {
     try {
-        sh './gradlew --no-daemon  test --profile'
+//        sh './gradlew --no-daemon  test --profile'
+        sh './gradlew test --profile'
     } catch (err) {
         echo "${err}"
         throw err
