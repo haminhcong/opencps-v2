@@ -17,10 +17,7 @@ node() {
                 ]
             }
             stage('Clean') {
-                sh 'cat  Jenkinsfile'
-                sh 'cat  Jenkinsfile'
-                sh 'cat  Jenkinsfile'
-                sh 'cat  Jenkinsfile'
+//                sh 'cat  Jenkinsfile'
                 sh './gradlew -v'
                 // Workaround with 'Gradle locks the global script cache' issue
                 sh 'find /home/gradle/.gradle -type f -name "*.lock" | while read f; do rm $f; done'
@@ -69,9 +66,8 @@ def testPushCommit() {
         throw err
     } finally {
         junit 'modules/**/TEST-*.xml'
-        def modulesList = getSubModules()
-        echo "${modulesList}"
-
+//        def modulesList = getSubModules()
+//        echo "${modulesList}"
 //        sh './gradlew --no-daemon  aggregateUnitTests --profile'
 //        publishHTML([
 //                allowMissing: true, alwaysLinkToLastBuild: false,
