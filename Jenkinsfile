@@ -1,3 +1,5 @@
+import static groovy.io.FileType.DIRECTORIES
+
 // pipeline for push commit build
 node() {
     docker.image('ntk148v/gradle-git-4.5.1:alpine').withRun('-v $HOME/.m2:/home/gradle/.m2 -v $HOME/.gradle:/home/gradle/.gradle') { c ->
@@ -41,22 +43,22 @@ def buildPushCommit() {
     sh './gradlew buildService --profile'
 }
 
-//@NonCPS
-//def getSubModules() {
-//    def currentDir = new File("modules")
-//    def moduleList = []
-//    currentDir.eachFileRecurse(FileType.DIRECTORIES) { dirName ->
-//        if (dirName.name.contains("backend") || dirName.name.contains("frontend") || dirName.name.contains("opencps")) {
-//            if (fileExists('file')) {
-//                echo "${dirName}"
-//                moduleList.add(dirName)
-//            } else {
-//                echo "No + ${dirName}"
-//            }
-//        }
-//    }
-//    return moduleList
-//}
+@NonCPS
+def getSubModules() {
+    def currentDir = new File("modules")
+    def moduleList = []
+    currentDir.eachFileRecurse(FileType.DIRECTORIES) { dirName ->
+        if (dirName.name.contains("backend") || dirName.name.contains("frontend") || dirName.name.contains("opencps")) {
+            if (fileExists('file')) {
+                echo "${dirName}"
+                moduleList.add(dirName)
+            } else {
+                echo "No + ${dirName}"
+            }
+        }
+    }
+    return moduleList
+}
 
 
 def testPushCommit() {
@@ -68,8 +70,8 @@ def testPushCommit() {
         throw err
     } finally {
         junit 'modules/**/TEST-*.xml'
-//        def modulesList = getSubModules()
-//        echo "${modulesList}"
+        def modulesList = getSubModules()
+        echo "${modulesList}"
 //        sh './gradlew --no-daemon  aggregateUnitTests --profile'
 //        publishHTML([
 //                allowMissing: true, alwaysLinkToLastBuild: false,
