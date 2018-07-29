@@ -7,7 +7,8 @@ node() {
 //                checkout scm
                 checkout changelog: true, poll: true, scm: [
                         $class           : 'GitSCM',
-                        branches: [[name: "${env.BRANCH_NAME}"]],
+                        branches: scm.branches,
+//                        branches: [[name: "${env.BRANCH_NAME}"]],
                         doGenerateSubmoduleConfigurations: false,
                         extensions       : [[$class   : 'CloneOption',
                                              reference: '/home/hieule/conghm-opencps-v2-local/opencps-v2.git',
