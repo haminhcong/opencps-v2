@@ -62,8 +62,10 @@ def testPushCommit() {
         echo "${err}"
         throw err
     } finally {
+        junit 'modules/**/TEST-*.xml'
         def modulesList = getSubModules()
         echo "${modulesList}"
+
 //        sh './gradlew --no-daemon  aggregateUnitTests --profile'
 //        publishHTML([
 //                allowMissing: true, alwaysLinkToLastBuild: false,
