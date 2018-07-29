@@ -1,4 +1,4 @@
-import static groovy.io.FileType.DIRECTORIES
+import groovy.io.FileType
 
 // pipeline for push commit build
 node() {
