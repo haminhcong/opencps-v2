@@ -25,11 +25,12 @@ public class FullNameUtilTest {
 
 		Assert.assertEquals("E.", middleInitial);
 	}
-    @Test
-    public void testToString() {
-        String fullName = _fullNameUtil.toString();
 
-        Assert.assertEquals("Brian E. Greenwald", fullName);
-    }
+  @Test
+  public void testToString() {
+        String fullName = _fullNameUtil.toString();
+        Assert.assertEquals("Brian E. Greenwald", fullName);  
+  }
+  
 	private FullNameUtil _fullNameUtil;
 }
