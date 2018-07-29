@@ -4,7 +4,15 @@ node() {
     docker.image('ntk148v/gradle-git-4.5.1:alpine').withRun('-v $HOME/.m2:/home/gradle/.m2 -v $HOME/.gradle:/home/gradle/.gradle') { c ->
         catchError {
             stage('Checkout') {
-                checkout scm
+//                checkout scm
+                checkout changelog: true, poll: true, scm: [
+                        $class           : 'GitSCM',
+                        extensions       : [[$class   : 'CloneOption',
+                                             reference: '/home/hieule/conghm-opencps-v2-local/opencps-v2.git',
+                                             shallow  : false, timeout: 75]],
+                        userRemoteConfigs: [[credentialsId: 'conghm-github-clone-token',
+                                             url          : 'https://github.com/haminhcong/opencps-v2']]
+                ]
             }
             stage('Clean') {
                 sh './gradlew -v'
@@ -36,21 +44,11 @@ def testPushCommit() {
         echo "${err}"
         throw err
     } finally {
-        def htmlReports = ""
-        def currentDir = new File("modules")
-        currentDir.eachFileRecurse(FileType.DIRECTORIES) { dirName ->
-            if (dirName.name.contains("backend") || dirName.name.contains("frontend") || dirName.name.contains("opencps")) {
-                htmlReports += dirName.name + "/reports/tests/test/index.html"
-            }
-        }
-        if (htmlReports.length() >= 1) {
-            htmlReports = htmlReports.substring(0, htmlReports.length() - 1);
-        }
-        echo "${htmlReports}"
+        sh './gradlew --no-daemon  aggregateUnitTests --profile'
         publishHTML([
                 allowMissing: true, alwaysLinkToLastBuild: false,
-                keepAll     : false, reportDir: 'modules',
-                reportFiles : htmlReports,
+                keepAll     : false, reportDir: 'build/unit_test_results',
+                reportFiles : "**.html",
                 reportName  : 'HTML Report', reportTitles: ''
         ])
     }
