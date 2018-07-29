@@ -1,0 +1,33 @@
+//test {
+//    reports {
+//        junitXml.enabled = false
+//        html.enabled = true
+//    }
+//}
+plugins {
+    id "org.sonarqube" version "2.6.2"
+}
+
+task aggregateUnitTests() {
+    doFirst {
+        new File(buildDir, 'unit_test_results').mkdirs()
+    }
+    doLast() {
+        subprojects.each { s ->
+//            println "project " + s.getName()
+//            println s.getPath()
+            File unitTestReport = new File(s.buildDir.getPath() + '/reports/tests/test/index.html')
+            println unitTestReport
+            if (unitTestReport.isFile()) {
+                println 'Test File Exists'
+                copy {
+                    from unitTestReport
+                    into buildDir.getPath() + "/unit_test_results"
+                    rename('index.html', s.getName() + "_index.html")
+                }
+            } else {
+                println 'Test File Does Not Exist'
+            }
+        }
+    }
+}

@@ -1,48 +1,36 @@
-node(){
+// pipeline for push commit build
+node() {
     docker.image('ntk148v/gradle-git-4.5.1:alpine').withRun('-v $HOME/.m2:/home/gradle/.m2 -v $HOME/.gradle:/home/gradle/.gradle') { c ->
         catchError {
             stage('Checkout') {
-                checkout scm
+                echo "${env.BRANCH_NAME}"
+//                checkout scm
+                checkout changelog: true, poll: true, scm: [
+                        $class           : 'GitSCM',
+                        branches: [[name: "${env.BRANCH_NAME}"]],
+                        doGenerateSubmoduleConfigurations: false,
+                        extensions       : [[$class   : 'CloneOption',
+                                             reference: '/home/hieule/conghm-opencps-v2-local/opencps-v2.git',
+                                             shallow  : false, timeout: 75]],
+                        userRemoteConfigs: [[credentialsId: 'conghm-github-clone-token',
+                                             url          : 'https://github.com/haminhcong/opencps-v2']]
+                ]
             }
-
             stage('Clean') {
+                sh 'cat  Jenkinsfile'
                 sh './gradlew -v'
                 // Workaround with 'Gradle locks the global script cache' issue
                 sh 'find /home/gradle/.gradle -type f -name "*.lock" | while read f; do rm $f; done'
+//                sh './gradlew --no-daemon clean --profile'
                 sh './gradlew clean --profile'
             }
 
             stage('Build') {
-               if (env.CHANGE_ID) {
-                    buildPullRequest()
-               } else {
-                    buildPushCommit()
-               }
+                buildPushCommit()
             }
 
             stage('Test') {
-                if (env.CHANGE_ID) {
-                    testPullRequest()
-                } else {
-                    testPushCommit()
-                }
-            }
-
-            stage('SonarQube analysis') {
-                withSonarQubeEnv('Sonar OpenCPS') {
-                    // requires SonarQube Scanner for Gradle 2.1+
-                    // It's important to add --info because of SONARJNKNS-281
-                    sh './gradlew --info sonarqube'
-                }
-
-                script {
-                    timeout(time: 1, unit: 'HOURS') { // Just in case something goes wrong, pipeline will be killed after a timeout
-                        def qg = waitForQualityGate() // Reuse taskId previously collected by withSonarQubeEnv
-                        if (qg.status != 'OK') {
-                            error "Pipeline aborted due to quality gate failure: ${qg.status}"
-                        }
-                    }
-                }
+                testPushCommit()
             }
         }
     }
@@ -50,103 +38,64 @@ node(){
 
 
 def buildPushCommit() {
-    try {
-        sh './gradlew buildService --profile'
-    } catch(InterruptedException interruptEx) {
-        currentBuild.result = 'ABORTED'
-    } catch(err) {
-        currentBuild.result = 'FAILED'
-        throw err
-    } finally {
-        // Update commit status (later)
-        return
-    }
+//    sh './gradlew --no-daemon  buildService --profile'
+    sh './gradlew buildService --profile'
 }
 
-
-def buildPullRequest() {
-    try {
-        sh './gradlew buildService --profile'
-    } catch(InterruptedException interruptEx) {
-        currentBuild.result = 'ABORTED'
-    } catch(err) {
-        currentBuild.result = 'FAILED'
-        throw err
-    } finally {
-        if (currentBuild.result == "ABORTED") {
-            pullRequest.createStatus(status: 'canceled',
-                                     description: 'Build was canceled')
-        } else if (currentBuild.result == "FAILED") {
-        pullRequest.createStatus(status: 'failed',
-                                 description: 'Build was  Failed')
-        } else {
-            return
-        }
-    }
-}
-
-
-def cleanPushCommit() {
-    try {
-        sh './gradlew -v'
-        // Workaround with 'Gradle locks the global script cache' issue
-        sh 'find /home/gradle/.gradle -type f -name "*.lock" | while read f; do rm $f; done'
-        sh './gradlew clean --profile'
-        currentBuild.result = 'SUCCESS'
-    } catch(InterruptedException interruptEx) {
-        currentBuild.result = 'ABORTED'
-    } catch(err) {
-        currentBuild.result = 'FAILED'
-        throw err
-    } finally {
-        // Update commit status (later)
-        return
-    }
-}
+//@NonCPS
+//def getSubModules() {
+//    def currentDir = new File("modules")
+//    def moduleList = []
+//    currentDir.eachFileRecurse(FileType.DIRECTORIES) { dirName ->
+//        if (dirName.name.contains("backend") || dirName.name.contains("frontend") || dirName.name.contains("opencps")) {
+//            if (fileExists('file')) {
+//                echo "${dirName}"
+//                moduleList.add(dirName)
+//            } else {
+//                echo "No + ${dirName}"
+//            }
+//        }
+//    }
+//    return moduleList
+//}
 
 
 def testPushCommit() {
     try {
+//        sh './gradlew --no-daemon  test --profile'
         sh './gradlew test --profile'
-        currentBuild.result = 'SUCCESS'
-    } catch(InterruptedException interruptEx) {
-        currentBuild.result = 'ABORTED'
-    } catch(err) {
-        currentBuild.result = 'FAILED'
+    } catch (err) {
+        echo "${err}"
         throw err
     } finally {
-        // Update commit status (later)
-        return
+        junit 'modules/**/TEST-*.xml'
+//        def modulesList = getSubModules()
+//        echo "${modulesList}"
+//        sh './gradlew --no-daemon  aggregateUnitTests --profile'
+//        publishHTML([
+//                allowMissing: true, alwaysLinkToLastBuild: false,
+//                keepAll     : false, reportDir: 'build/unit_test_results',
+//                reportFiles : "**.html",
+//                reportName  : 'HTML Report', reportTitles: ''
+//        ])
     }
 }
 
-
-def testPullRequest() {
-    try {
-        sh './gradlew test --profile'
-        currentBuild.result = 'SUCCESS'
-    } catch(InterruptedException interruptEx) {
-        currentBuild.result = 'ABORTED'
-    } catch(err) {
-        currentBuild.result = 'FAILED'
-        throw err
-    } finally {
-        // Uncomment when we know Reviewer identities
-        // pullRequest.addAssignee('Noone')
-        if (currentBuild.result == "ABORTED") {
-            pullRequest.createStatus(status: 'canceled',
-                                     description: 'Test was canceled')
-        } else if (currentBuild.result == "FAILED") {
-            pullRequest.createStatus(status: 'failed',
-                                     description: 'Test was Failed',
-                                     targetUrl: "${env.JOB_URL}/testResults")
-        } else if (currentBuild.result == 'SUCCESS') {
-            // Create report! (with junit or publishHTML)
-            pullRequest.createStatus(status: 'SUCCESS',
-                                     description: 'All tests are passing.',
-                                     targetUrl: "${env.JOB_URL}/testResults")
-        } else {
-            return
-        }
-    }
-}
+//def htmlReports = ""
+//def currentDir = new File("modules")
+//currentDir.eachFileRecurse(FileType.DIRECTORIES) { dirName ->
+//    if (dirName.name.contains("backend") || dirName.name.contains("frontend") || dirName.name.contains("opencps")) {
+//        htmlReports += dirName.name + "/reports/tests/test/index.html"
+//    }
+//}
+//if (htmlReports.length() >= 1) {
+//    htmlReports = htmlReports.substring(0, htmlReports.length() - 1);
+//}
+//echo "${htmlReports}"
+//publishHTML([
+//        allowMissing: true, alwaysLinkToLastBuild: false,
+//        keepAll     : false, reportDir: 'modules',
+//        reportFiles : htmlReports,
+//        reportName  : 'HTML Report', reportTitles: ''
+//])
+//
