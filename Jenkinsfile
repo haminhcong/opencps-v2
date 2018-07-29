@@ -9,7 +9,7 @@ node() {
                         $class           : 'GitSCM',
                         branches: scm.branches,
                         doGenerateSubmoduleConfigurations: scm.doGenerateSubmoduleConfigurations,
-                        extensions       : [scm.extensions, [$class   : 'CloneOption',
+                        extensions       : [[$class   : 'CloneOption',
                                              reference: '/home/hieule/conghm-opencps-v2-local/opencps-v2.git',
                                              shallow  : false, timeout: 75]],
                         userRemoteConfigs: [[credentialsId: 'conghm-github-clone-token',
