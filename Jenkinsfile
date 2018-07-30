@@ -2,7 +2,7 @@ import groovy.io.FileType
 
 // pipeline for push commit build
 
-@NonCPS
+//@NonCPS
 def getSubModules() {
     sh "ls -al"
     def modulesDir = new File("${workspace}/modules")
