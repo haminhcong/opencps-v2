@@ -47,7 +47,7 @@ def buildPushCommit() {
 @NonCPS
 def getSubModules() {
     sh "ls -al"
-    def currentDir = new File("./modules")
+    def currentDir = new File("${workspace}/modules")
     echo "${currentDir.path}"
     def moduleList = []
 //    currentDir.eachFileRecurse(FileType.DIRECTORIES) { dirName ->
