@@ -11,11 +11,12 @@ def getSubModules() {
 //    modulesDir.traverse(type: groovy.io.FileType.FILES) { it ->
 //        println it
 //    }
-    new File("${workspace}/modules").traverse(type: FileType.FILES) {
-//        files.add(it)
-        echo "${it}"
-        moduleList.add(it)
+    new File("${workspace}/modules").eachDir() { dir ->
+        println dir.getPath()
+        echo "${ dir.getPath()}"
+        moduleList.add(dir)
     }
+
     echo "${moduleList.size()}"
 //    modulesDir.eachFileRecurse(FileType.DIRECTORIES) { dirName ->
 //        echo "${dirName}"
