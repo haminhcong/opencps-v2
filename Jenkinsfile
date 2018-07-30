@@ -1,7 +1,7 @@
 def getSubModules() {
     sh "ls -al"
     def currentDir = new File("${workspace}/modules")
-    echo "get modules ${currentDir.getPath()}"
+//    echo "get modules ${currentDir.getPath()}"
     echo "get modules ${currentDir.getName()}"
     def moduleList = [1, 2, 3]
 //    currentDir.eachFileRecurse(FileType.DIRECTORIES) { dirName ->
