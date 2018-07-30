@@ -44,7 +44,7 @@ node() {
                 sh './gradlew -v'
                 // Workaround with 'Gradle locks the global script cache' issue
                 sh 'find /home/gradle/.gradle -type f -name "*.lock" | while read f; do rm $f; done'
-                sh './gradlew --no-daemon clean --profile'
+//                sh './gradlew --no-daemon clean --profile'
 
                 def modulesList = getSubModules()
                 echo "${modulesList}"
