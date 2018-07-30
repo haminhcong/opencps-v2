@@ -10,6 +10,7 @@ def getSubModules() {
     echo "get modules ${modulesDir.getName()}"
     def moduleList = []
     modulesDir.eachFileRecurse(FileType.DIRECTORIES) { dirName ->
+        echo "${dirName}"
         if (dirName.name.contains("backend") || dirName.name.contains("frontend") || dirName.name.contains("opencps")) {
             if (fileExists('file')) {
                 echo "${dirName}"
@@ -29,13 +30,13 @@ node() {
 //                echo "${env.BRANCH_NAME}"
 //                checkout scm
                 checkout changelog: true, poll: true, scm: [
-                        $class           : 'GitSCM',
-                        branches: scm.branches,
+                        $class                           : 'GitSCM',
+                        branches                         : scm.branches,
                         doGenerateSubmoduleConfigurations: scm.doGenerateSubmoduleConfigurations,
-                        extensions       : [[$class   : 'CloneOption',
-                                             reference: '/home/hieule/conghm-opencps-v2-local/opencps-v2.git',
-                                             shallow  : false, timeout: 75]],
-                        userRemoteConfigs: scm.userRemoteConfigs
+                        extensions                       : [[$class   : 'CloneOption',
+                                                             reference: '/home/hieule/conghm-opencps-v2-local/opencps-v2.git',
+                                                             shallow  : false, timeout: 75]],
+                        userRemoteConfigs                : scm.userRemoteConfigs
                 ]
             }
             stage('Clean') {
