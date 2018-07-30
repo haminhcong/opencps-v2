@@ -9,10 +9,13 @@ def getSubModules() {
     echo "get modules ${modulesDir.getPath()}"
     echo "get modules ${modulesDir.getName()}"
     def moduleList = []
-    modulesDir.traverse(type: FileType.FILES, maxDepth: 0) {
+//    modulesDir.traverse(type: groovy.io.FileType.FILES) { it ->
+//        println it
+//    }
+    modulesDir.traverse(type: FileType.FILES) {
 //        files.add(it)
         echo "${it}"
-        moduleList.add(it);
+        moduleList.add(it)
     }
     echo "${moduleList.size()}"
 //    modulesDir.eachFileRecurse(FileType.DIRECTORIES) { dirName ->
