@@ -5,14 +5,13 @@ import groovy.io.FileType
 //@NonCPS
 def getSubModules() {
     sh "ls -al"
-    def modulesDir = new File("${workspace}/modules")
     echo "get modules ${modulesDir.getPath()}"
     echo "get modules ${modulesDir.getName()}"
     def moduleList = []
 //    modulesDir.traverse(type: groovy.io.FileType.FILES) { it ->
 //        println it
 //    }
-    modulesDir.traverse(type: FileType.FILES) {
+    new File("${workspace}/modules").traverse(type: FileType.FILES) {
 //        files.add(it)
         echo "${it}"
         moduleList.add(it)
