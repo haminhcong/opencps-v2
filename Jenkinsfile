@@ -48,7 +48,8 @@ def buildPushCommit() {
 def getSubModules() {
     sh "ls -al"
     def currentDir = new File("${workspace}/modules")
-    echo "${currentDir.path}"
+    echo "${currentDir.getPath()}"
+    echo "${currentDir.getName()}"
     def moduleList = []
 //    currentDir.eachFileRecurse(FileType.DIRECTORIES) { dirName ->
 //        if (dirName.name.contains("backend") || dirName.name.contains("frontend") || dirName.name.contains("opencps")) {
