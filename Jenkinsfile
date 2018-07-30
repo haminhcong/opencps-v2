@@ -1,5 +1,26 @@
 import groovy.io.FileType
 
+@NonCPS
+def getSubModules() {
+    sh "ls -al"
+    def currentDir = new File("${workspace}/modules")
+    echo "get modules ${currentDir.getPath()}"
+    echo "get modules ${currentDir.getName()}"
+    def moduleList = []
+//    currentDir.eachFileRecurse(FileType.DIRECTORIES) { dirName ->
+//        if (dirName.name.contains("backend") || dirName.name.contains("frontend") || dirName.name.contains("opencps")) {
+//            if (fileExists('file')) {
+//                echo "${dirName}"
+//                moduleList.add(dirName)
+//            } else {
+//                echo "No + ${dirName}"
+//            }
+//        }
+//    }
+    return moduleList
+}
+
+
 // pipeline for push commit build
 node() {
     docker.image('ntk148v/gradle-git-4.5.1:alpine').withRun('-v $HOME/.m2:/home/gradle/.m2 -v $HOME/.gradle:/home/gradle/.gradle') { c ->
@@ -24,8 +45,8 @@ node() {
                 sh 'find /home/gradle/.gradle -type f -name "*.lock" | while read f; do rm $f; done'
                 sh './gradlew --no-daemon clean --profile'
 
-                def modulesList = getSubModules()
-                echo "${modulesList}"
+                getSubModules()
+//                echo "${modulesList}"
             }
 //
 //            stage('Build') {
@@ -39,30 +60,10 @@ node() {
     }
 }
 
-
 def buildPushCommit() {
     sh './gradlew --no-daemon  buildService --profile'
 }
 
-@NonCPS
-def getSubModules() {
-    sh "ls -al"
-    def currentDir = new File("${workspace}/modules")
-    echo "get modules ${currentDir.getPath()}"
-    echo "get modules ${currentDir.getName()}"
-    def moduleList = []
-//    currentDir.eachFileRecurse(FileType.DIRECTORIES) { dirName ->
-//        if (dirName.name.contains("backend") || dirName.name.contains("frontend") || dirName.name.contains("opencps")) {
-//            if (fileExists('file')) {
-//                echo "${dirName}"
-//                moduleList.add(dirName)
-//            } else {
-//                echo "No + ${dirName}"
-//            }
-//        }
-//    }
-    return moduleList
-}
 
 
 def testPushCommit() {
