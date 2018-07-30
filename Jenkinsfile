@@ -23,15 +23,18 @@ node() {
                 // Workaround with 'Gradle locks the global script cache' issue
                 sh 'find /home/gradle/.gradle -type f -name "*.lock" | while read f; do rm $f; done'
                 sh './gradlew --no-daemon clean --profile'
-            }
 
-            stage('Build') {
-                buildPushCommit()
+                def modulesList = getSubModules()
+                echo "${modulesList}"
             }
-
-            stage('Test') {
-                testPushCommit()
-            }
+//
+//            stage('Build') {
+//                buildPushCommit()
+//            }
+//
+//            stage('Test') {
+//                testPushCommit()
+//            }
         }
     }
 }
@@ -45,17 +48,18 @@ def buildPushCommit() {
 def getSubModules() {
     sh "ls -al"
     def currentDir = new File("./modules")
+    echo "${currentDir.path}"
     def moduleList = []
-    currentDir.eachFileRecurse(FileType.DIRECTORIES) { dirName ->
-        if (dirName.name.contains("backend") || dirName.name.contains("frontend") || dirName.name.contains("opencps")) {
-            if (fileExists('file')) {
-                echo "${dirName}"
-                moduleList.add(dirName)
-            } else {
-                echo "No + ${dirName}"
-            }
-        }
-    }
+//    currentDir.eachFileRecurse(FileType.DIRECTORIES) { dirName ->
+//        if (dirName.name.contains("backend") || dirName.name.contains("frontend") || dirName.name.contains("opencps")) {
+//            if (fileExists('file')) {
+//                echo "${dirName}"
+//                moduleList.add(dirName)
+//            } else {
+//                echo "No + ${dirName}"
+//            }
+//        }
+//    }
     return moduleList
 }
 
