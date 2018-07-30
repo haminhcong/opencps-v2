@@ -46,11 +46,9 @@ def getSubModules() {
     new File("${workspace}/modules").eachDir() { dirName ->
         if (dirName.name.contains("backend") || dirName.name.contains("frontend") || dirName.name.contains("opencps")) {
             moduleList.add(dirName.getName())
-//
-//            def testReportFileExist = fileExists "${dirName.getPath()}/build/reports/tests/test/index.html"
-//            if (testReportFileExist) {
-//                moduleList.add(dirName.getName())
-//            }
+            if (fileExists("${dirName.getPath()}/build/reports/tests/test/index.html")) {
+                moduleList.add(dirName.getName())
+            }
         }
     }
     return moduleList
