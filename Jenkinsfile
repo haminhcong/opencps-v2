@@ -2,19 +2,17 @@
 
 @NonCPS
 def getSubModules() {
-    sh "ls -al"
+    def moduleList = ['1', '2', '3']
 //    echo "get modules ${modulesDir.getPath()}"
 //    echo "get modules ${modulesDir.getName()}"
-    def moduleList = []
 //    modulesDir.traverse(type: groovy.io.FileType.FILES) { it ->
 //        println it
 //    }
     new File("${workspace}").eachDir() { dir ->
         println dir.getPath()
         echo "${dir.getPath()}"
-        moduleList.add(dir)
+        moduleList.add(dir.getName())
     }
-    echo "${moduleList.size()}"
 //    modulesDir.eachFileRecurse(FileType.DIRECTORIES) { dirName ->
 //        echo "${dirName}"
 //        if (dirName.name.contains("backend") || dirName.name.contains("frontend") || dirName.name.contains("opencps")) {
@@ -26,7 +24,7 @@ def getSubModules() {
 //            }
 //        }
 //    }
-    moduleList
+   return moduleList
 }
 
 node() {
