@@ -70,7 +70,7 @@ def testPushCommit() {
             publishHTML([
                     allowMissing: true, alwaysLinkToLastBuild: true,
                     keepAll     : true,
-                    reportDir   : "modules/${subModule}//build/reports/tests/test/",
+                    reportDir   : "modules/${subModule}/build/reports/tests/test/",
                     reportFiles : "index.html",
                     reportName  : "Unit test ${subModule} Report",
                     reportTitles: "Unit test ${subModule} Report"
