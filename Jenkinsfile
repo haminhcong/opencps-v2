@@ -12,7 +12,9 @@ def getSubModules() {
     modulesDir.traverse(type: FileType.DIRECTORIES, maxDepth: 0) {
 //        files.add(it)
         echo "${it}"
+        moduleList.add(it);
     }
+    echo "${moduleList.size()}"
 //    modulesDir.eachFileRecurse(FileType.DIRECTORIES) { dirName ->
 //        echo "${dirName}"
 //        if (dirName.name.contains("backend") || dirName.name.contains("frontend") || dirName.name.contains("opencps")) {
