@@ -6,7 +6,7 @@ def getSubModules() {
     def moduleList = []
     new File("${workspace}/modules").eachDir() { dirName ->
         if (dirName.name.contains("backend") || dirName.name.contains("frontend") || dirName.name.contains("opencps")) {
-            moduleList.add(dirName)
+            moduleList.add(dirName.getName())
 //            if (fileExists('file')) {
 //                echo "${dirName}"
 //                moduleList.add(dirName)
