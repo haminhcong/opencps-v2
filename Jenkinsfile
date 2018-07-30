@@ -9,7 +9,6 @@ def getSubModules() {
 //        println it
 //    }
     new File("${workspace}").eachDir() { dir ->
-        println dir.getPath()
         echo "${dir.getPath()}"
         moduleList.add(dir.getName())
     }
