@@ -1,23 +1,4 @@
 // pipeline for push commit build
-import  groovy.io.FileType
-
-@NonCPS
-def getSubModules() {
-    def moduleList = []
-    new File("${workspace}/modules").eachDir() { dirName ->
-        if (dirName.name.contains("backend") || dirName.name.contains("frontend") || dirName.name.contains("opencps")) {
-            moduleList.add(dirName.getName())
-//            if (fileExists('file')) {
-//                echo "${dirName}"
-//                moduleList.add(dirName)
-//            } else {
-//                echo "No + ${dirName}"
-//            }
-        }
-    }
-   return moduleList
-}
-
 node() {
     docker.image('ntk148v/gradle-git-4.5.1:alpine').withRun('-v $HOME/.m2:/home/gradle/.m2 -v $HOME/.gradle:/home/gradle/.gradle') { c ->
         catchError {
@@ -39,19 +20,17 @@ node() {
                 sh './gradlew -v'
                 // Workaround with 'Gradle locks the global script cache' issue
                 sh 'find /home/gradle/.gradle -type f -name "*.lock" | while read f; do rm $f; done'
-//                sh './gradlew --no-daemon clean --profile'
+                sh './gradlew --no-daemon clean --profile'
 
-                def modulesList = getSubModules()
-                echo "${modulesList}"
             }
-//
-//            stage('Build') {
-//                buildPushCommit()
-//            }
-//
-//            stage('Test') {
-//                testPushCommit()
-//            }
+
+            stage('Build') {
+                buildPushCommit()
+            }
+
+            stage('Test') {
+                testPushCommit()
+            }
         }
     }
 }
@@ -61,7 +40,16 @@ def buildPushCommit() {
     sh './gradlew --no-daemon  buildService --profile'
 }
 
-
+@NonCPS
+def getSubModules() {
+    def moduleList = []
+    new File("${workspace}/modules").eachDir() { dirName ->
+        if (dirName.name.contains("backend") || dirName.name.contains("frontend") || dirName.name.contains("opencps")) {
+            moduleList.add(dirName.getName())
+        }
+    }
+    return moduleList
+}
 def testPushCommit() {
     try {
         sh './gradlew --no-daemon  test --profile'
