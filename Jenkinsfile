@@ -45,14 +45,16 @@ def getSubModules() {
     def moduleList = []
     new File("${workspace}/modules").eachDir() { dirName ->
         if (dirName.name.contains("backend") || dirName.name.contains("frontend") || dirName.name.contains("opencps")) {
-            moduleList.add(dirName.getName())
-            if (fileExists("${dirName.getPath()}/build/reports/tests/test/index.html")) {
+//            moduleList.add(dirName.getName())
+            def testReportFile = new File("${dirName.getPath()}/build/reports/tests/test/index.html")
+            if (testReportFile.exists()) {
                 moduleList.add(dirName.getName())
             }
         }
     }
     return moduleList
 }
+
 def testPushCommit() {
     try {
         sh './gradlew --no-daemon  test --profile'
