@@ -9,7 +9,7 @@ def getSubModules() {
     echo "get modules ${modulesDir.getPath()}"
     echo "get modules ${modulesDir.getName()}"
     def moduleList = []
-    modulesDir.traverse(type: FileType.DIRECTORIES, maxDepth: 0) {
+    modulesDir.traverse(type: FileType.FILES, maxDepth: 0) {
 //        files.add(it)
         echo "${it}"
         moduleList.add(it);
