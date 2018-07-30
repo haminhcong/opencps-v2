@@ -22,8 +22,7 @@ node() {
                 sh './gradlew -v'
                 // Workaround with 'Gradle locks the global script cache' issue
                 sh 'find /home/gradle/.gradle -type f -name "*.lock" | while read f; do rm $f; done'
-//                sh './gradlew --no-daemon clean --profile'
-                sh './gradlew clean --profile'
+                sh './gradlew --no-daemon clean --profile'
             }
 
             stage('Build') {
@@ -39,13 +38,13 @@ node() {
 
 
 def buildPushCommit() {
-//    sh './gradlew --no-daemon  buildService --profile'
-    sh './gradlew buildService --profile'
+    sh './gradlew --no-daemon  buildService --profile'
 }
 
 @NonCPS
 def getSubModules() {
-    def currentDir = new File("modules")
+    sh "ls -al"
+    def currentDir = new File("./modules")
     def moduleList = []
     currentDir.eachFileRecurse(FileType.DIRECTORIES) { dirName ->
         if (dirName.name.contains("backend") || dirName.name.contains("frontend") || dirName.name.contains("opencps")) {
@@ -63,8 +62,7 @@ def getSubModules() {
 
 def testPushCommit() {
     try {
-//        sh './gradlew --no-daemon  test --profile'
-        sh './gradlew test --profile'
+        sh './gradlew --no-daemon  test --profile'
     } catch (err) {
         echo "${err}"
         throw err
