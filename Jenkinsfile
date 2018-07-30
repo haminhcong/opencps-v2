@@ -5,8 +5,8 @@ import groovy.io.FileType
 //@NonCPS
 def getSubModules() {
     sh "ls -al"
-    echo "get modules ${modulesDir.getPath()}"
-    echo "get modules ${modulesDir.getName()}"
+//    echo "get modules ${modulesDir.getPath()}"
+//    echo "get modules ${modulesDir.getName()}"
     def moduleList = []
 //    modulesDir.traverse(type: groovy.io.FileType.FILES) { it ->
 //        println it
