@@ -1,12 +1,9 @@
-import groovy.io.FileType
-
-@NonCPS
 def getSubModules() {
     sh "ls -al"
     def currentDir = new File("${workspace}/modules")
     echo "get modules ${currentDir.getPath()}"
     echo "get modules ${currentDir.getName()}"
-    def moduleList = []
+    def moduleList = [1, 2, 3]
 //    currentDir.eachFileRecurse(FileType.DIRECTORIES) { dirName ->
 //        if (dirName.name.contains("backend") || dirName.name.contains("frontend") || dirName.name.contains("opencps")) {
 //            if (fileExists('file')) {
@@ -20,7 +17,6 @@ def getSubModules() {
     return moduleList
 }
 
-
 // pipeline for push commit build
 node() {
     docker.image('ntk148v/gradle-git-4.5.1:alpine').withRun('-v $HOME/.m2:/home/gradle/.m2 -v $HOME/.gradle:/home/gradle/.gradle') { c ->
@@ -29,13 +25,13 @@ node() {
 //                echo "${env.BRANCH_NAME}"
 //                checkout scm
                 checkout changelog: true, poll: true, scm: [
-                        $class           : 'GitSCM',
-                        branches: scm.branches,
+                        $class                           : 'GitSCM',
+                        branches                         : scm.branches,
                         doGenerateSubmoduleConfigurations: scm.doGenerateSubmoduleConfigurations,
-                        extensions       : [[$class   : 'CloneOption',
-                                             reference: '/home/hieule/conghm-opencps-v2-local/opencps-v2.git',
-                                             shallow  : false, timeout: 75]],
-                        userRemoteConfigs: scm.userRemoteConfigs
+                        extensions                       : [[$class   : 'CloneOption',
+                                                             reference: '/home/hieule/conghm-opencps-v2-local/opencps-v2.git',
+                                                             shallow  : false, timeout: 75]],
+                        userRemoteConfigs                : scm.userRemoteConfigs
                 ]
             }
             stage('Clean') {
@@ -45,8 +41,8 @@ node() {
                 sh 'find /home/gradle/.gradle -type f -name "*.lock" | while read f; do rm $f; done'
                 sh './gradlew --no-daemon clean --profile'
 
-                getSubModules()
-//                echo "${modulesList}"
+                def modulesList = getSubModules()
+                echo "${modulesList}"
             }
 //
 //            stage('Build') {
@@ -63,7 +59,6 @@ node() {
 def buildPushCommit() {
     sh './gradlew --no-daemon  buildService --profile'
 }
-
 
 
 def testPushCommit() {
