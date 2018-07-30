@@ -2,7 +2,8 @@ def getSubModules() {
     sh "ls -al"
     def currentDir = new File("${workspace}/modules")
 //    echo "get modules ${currentDir.getPath()}"
-    echo "get modules ${currentDir.getName()}"
+    echo "get modules ${currentDir.name}"
+    echo "get modules ${currentDir.path}"
     def moduleList = [1, 2, 3]
 //    currentDir.eachFileRecurse(FileType.DIRECTORIES) { dirName ->
 //        if (dirName.name.contains("backend") || dirName.name.contains("frontend") || dirName.name.contains("opencps")) {
