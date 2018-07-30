@@ -1,5 +1,3 @@
-import groovy.io.FileType
-
 // pipeline for push commit build
 
 @NonCPS
@@ -13,7 +11,7 @@ def getSubModules() {
 //    }
     new File("${workspace}").eachDir() { dir ->
         println dir.getPath()
-        echo "${ dir.getPath()}"
+        echo "${dir.getPath()}"
         moduleList.add(dir)
     }
     echo "${moduleList.size()}"
@@ -28,7 +26,7 @@ def getSubModules() {
 //            }
 //        }
 //    }
-    return moduleList
+    moduleList
 }
 
 node() {
