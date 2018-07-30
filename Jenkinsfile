@@ -1,24 +1,27 @@
+import groovy.io.FileType
+
+// pipeline for push commit build
+
+@NonCPS
 def getSubModules() {
     sh "ls -al"
-    def currentDir = new File("${workspace}/modules")
-//    echo "get modules ${currentDir.getPath()}"
-    echo "get modules ${currentDir.name}"
-    echo "get modules ${currentDir.path}"
-    def moduleList = [1, 2, 3]
-//    currentDir.eachFileRecurse(FileType.DIRECTORIES) { dirName ->
-//        if (dirName.name.contains("backend") || dirName.name.contains("frontend") || dirName.name.contains("opencps")) {
-//            if (fileExists('file')) {
-//                echo "${dirName}"
-//                moduleList.add(dirName)
-//            } else {
-//                echo "No + ${dirName}"
-//            }
-//        }
-//    }
+    def modulesDir = new File("${workspace}/modules")
+    echo "get modules ${modulesDir.getPath()}"
+    echo "get modules ${modulesDir.getName()}"
+    def moduleList = []
+    modulesDir.eachFileRecurse(FileType.DIRECTORIES) { dirName ->
+        if (dirName.name.contains("backend") || dirName.name.contains("frontend") || dirName.name.contains("opencps")) {
+            if (fileExists('file')) {
+                echo "${dirName}"
+                moduleList.add(dirName)
+            } else {
+                echo "No + ${dirName}"
+            }
+        }
+    }
     return moduleList
 }
 
-// pipeline for push commit build
 node() {
     docker.image('ntk148v/gradle-git-4.5.1:alpine').withRun('-v $HOME/.m2:/home/gradle/.m2 -v $HOME/.gradle:/home/gradle/.gradle') { c ->
         catchError {
@@ -26,13 +29,13 @@ node() {
 //                echo "${env.BRANCH_NAME}"
 //                checkout scm
                 checkout changelog: true, poll: true, scm: [
-                        $class                           : 'GitSCM',
-                        branches                         : scm.branches,
+                        $class           : 'GitSCM',
+                        branches: scm.branches,
                         doGenerateSubmoduleConfigurations: scm.doGenerateSubmoduleConfigurations,
-                        extensions                       : [[$class   : 'CloneOption',
-                                                             reference: '/home/hieule/conghm-opencps-v2-local/opencps-v2.git',
-                                                             shallow  : false, timeout: 75]],
-                        userRemoteConfigs                : scm.userRemoteConfigs
+                        extensions       : [[$class   : 'CloneOption',
+                                             reference: '/home/hieule/conghm-opencps-v2-local/opencps-v2.git',
+                                             shallow  : false, timeout: 75]],
+                        userRemoteConfigs: scm.userRemoteConfigs
                 ]
             }
             stage('Clean') {
@@ -56,6 +59,7 @@ node() {
         }
     }
 }
+
 
 def buildPushCommit() {
     sh './gradlew --no-daemon  buildService --profile'
