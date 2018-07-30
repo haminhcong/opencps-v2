@@ -1,28 +1,21 @@
 // pipeline for push commit build
+import  groovy.io.FileType
 
 @NonCPS
 def getSubModules() {
-    def moduleList = ['1', '2', '3']
-//    echo "get modules ${modulesDir.getPath()}"
-//    echo "get modules ${modulesDir.getName()}"
-//    modulesDir.traverse(type: groovy.io.FileType.FILES) { it ->
-//        println it
-//    }
-    new File("${workspace}").eachDir() { dir ->
-        echo "${dir.getPath()}"
-        moduleList.add(dir.getName())
-    }
-//    modulesDir.eachFileRecurse(FileType.DIRECTORIES) { dirName ->
-//        echo "${dirName}"
-//        if (dirName.name.contains("backend") || dirName.name.contains("frontend") || dirName.name.contains("opencps")) {
+    def moduleList = []
+    new File("${workspace}/modules").eachFileRecurse(FileType.DIRECTORIES) { dirName ->
+        if (dirName.name.contains("backend") || dirName.name.contains("frontend") || dirName.name.contains("opencps")) {
+            moduleList.add(dirName)
+
 //            if (fileExists('file')) {
 //                echo "${dirName}"
 //                moduleList.add(dirName)
 //            } else {
 //                echo "No + ${dirName}"
 //            }
-//        }
-//    }
+        }
+    }
    return moduleList
 }
 
