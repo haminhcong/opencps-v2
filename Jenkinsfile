@@ -9,17 +9,21 @@ def getSubModules() {
     echo "get modules ${modulesDir.getPath()}"
     echo "get modules ${modulesDir.getName()}"
     def moduleList = []
-    modulesDir.eachFileRecurse(FileType.DIRECTORIES) { dirName ->
-        echo "${dirName}"
-        if (dirName.name.contains("backend") || dirName.name.contains("frontend") || dirName.name.contains("opencps")) {
-            if (fileExists('file')) {
-                echo "${dirName}"
-                moduleList.add(dirName)
-            } else {
-                echo "No + ${dirName}"
-            }
-        }
+    modulesDir.traverse(type: FileType.DIRECTORIES, maxDepth: 0) {
+//        files.add(it)
+        echo "${it}"
     }
+//    modulesDir.eachFileRecurse(FileType.DIRECTORIES) { dirName ->
+//        echo "${dirName}"
+//        if (dirName.name.contains("backend") || dirName.name.contains("frontend") || dirName.name.contains("opencps")) {
+//            if (fileExists('file')) {
+//                echo "${dirName}"
+//                moduleList.add(dirName)
+//            } else {
+//                echo "No + ${dirName}"
+//            }
+//        }
+//    }
     return moduleList
 }
 
