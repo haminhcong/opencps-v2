@@ -23,6 +23,7 @@ node() {
                 sh './gradlew --no-daemon clean --profile'
                 sh 'pwd'
                 sh 'ls -al .'
+                sh 'du -sh .'
                 sh 'sleep 120'
             }
 
