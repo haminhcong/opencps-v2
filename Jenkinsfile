@@ -1,6 +1,6 @@
 // pipeline for push commit build
 node() {
-    docker.image('ntk148v/gradle-git-4.5.1:alpine').withRun('-v $HOME/.m2:/home/gradle/.m2 -v $HOME/.gradle:/home/gradle/.gradle') { c ->
+    docker.image('conghm/gradle-git-4.5.1:alpine').withRun('-v maven_cache_volume:/home/gradle/maven_cache -v gradle_cache_volume:/home/gradle/gradle_cache') { c ->
         catchError {
             stage('Checkout') {
 //                echo "${env.BRANCH_NAME}"
@@ -68,12 +68,12 @@ def testPushCommit() {
         echo "${modulesList.size()}"
         for (def subModule : subModules) {
             publishHTML([
-                    allowMissing: true, alwaysLinkToLastBuild: true,
-                    keepAll     : true,
-                    reportDir   : "modules/${subModule}/build/reports/tests/test/",
-                    reportFiles : "index.html",
-                    reportName  : "Unit test ${subModule} Report",
-                    reportTitles: "Unit test ${subModule} Report"
+                    allowMissing         : true,
+                    alwaysLinkToLastBuild: true,
+                    keepAll              : true,
+                    reportDir            : "modules/${subModule}/build/reports/tests/test/",
+                    reportFiles          : "index.html",
+                    reportTitles         : "Unit test ${subModule} Report"
             ])
         }
     }
