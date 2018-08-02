@@ -1,6 +1,7 @@
 // pipeline for push commit build
 node() {
-    docker.image('conghm/gradle-git-4.5.1:alpine').withRun('-v maven_cache_volume:/home/gradle/maven_cache -v gradle_cache_volume:/home/gradle/gradle_cache') { c ->
+//    docker.image('conghm/gradle-git-4.5.1:alpine').withRun('-v maven_cache_volume:/home/gradle/maven_cache -v gradle_cache_volume:/home/gradle/gradle_cache') { c ->
+    docker.image('conghm/gradle-git-4.5.1:alpine').withRun() { c ->
         catchError {
             stage('Checkout') {
 //                echo "${env.BRANCH_NAME}"
@@ -21,10 +22,6 @@ node() {
                 // Workaround with 'Gradle locks the global script cache' issue
                 sh 'find /home/gradle/.gradle -type f -name "*.lock" | while read f; do rm $f; done'
                 sh './gradlew --no-daemon clean --profile'
-                sh 'pwd'
-                sh 'ls -al .'
-                sh 'du -sh .'
-                sh 'sleep 120'
             }
 
             stage('Build') {
