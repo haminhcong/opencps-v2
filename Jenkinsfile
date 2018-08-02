@@ -21,7 +21,8 @@ node() {
                 // Workaround with 'Gradle locks the global script cache' issue
                 sh 'find /home/gradle/.gradle -type f -name "*.lock" | while read f; do rm $f; done'
                 sh './gradlew --no-daemon clean --profile'
-
+                sh 'du -sh /home/gradle/.gradle'
+                sh 'sleep 120'
             }
 
             stage('Build') {
