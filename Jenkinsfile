@@ -2,34 +2,32 @@
 node() {
 //    docker.image('conghm/gradle-git-4.5.1:alpine').withRun('-v maven_cache_volume:/home/gradle/maven_cache -v gradle_cache_volume:/home/gradle/gradle_cache') { c ->
 //    docker.image('conghm/gradle-git-4.5.1:alpine').withRun() { c ->
-    docker.image('gradle:4.9.0-jdk8').withRun() { c ->
-        catchError {
-            stage('Checkout') {
+    docker.image('gradle:4.9.0-jdk8').inside() {
+        stage('Checkout') {
 //                echo "${env.BRANCH_NAME}"
 //                checkout scm
-                checkout changelog: true, poll: true, scm: [
-                        $class                           : 'GitSCM',
-                        branches                         : scm.branches,
-                        doGenerateSubmoduleConfigurations: scm.doGenerateSubmoduleConfigurations,
-                        extensions                       : [[$class   : 'CloneOption',
-                                                             reference: '/home/hieule/conghm-opencps-v2-local/opencps-v2.git',
-                                                             shallow  : false, timeout: 75]],
-                        userRemoteConfigs                : scm.userRemoteConfigs
-                ]
-            }
-            stage('Clean') {
-                sh 'cat  Jenkinsfile'
-                sh 'gradle -v'
-                sh 'gradle --no-daemon clean --profile'
-            }
+            checkout changelog: true, poll: true, scm: [
+                    $class                           : 'GitSCM',
+                    branches                         : scm.branches,
+                    doGenerateSubmoduleConfigurations: scm.doGenerateSubmoduleConfigurations,
+                    extensions                       : [[$class   : 'CloneOption',
+                                                         reference: '/home/hieule/conghm-opencps-v2-local/opencps-v2.git',
+                                                         shallow  : false, timeout: 75]],
+                    userRemoteConfigs                : scm.userRemoteConfigs
+            ]
+        }
+        stage('Clean') {
+            sh 'cat  Jenkinsfile'
+            sh 'gradle -v'
+            sh 'gradle --no-daemon clean --profile'
+        }
 
-            stage('Build') {
-                buildPushCommit()
-            }
+        stage('Build') {
+            buildPushCommit()
+        }
 
-            stage('Test') {
-                testPushCommit()
-            }
+        stage('Test') {
+            testPushCommit()
         }
     }
 }
