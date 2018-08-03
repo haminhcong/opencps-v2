@@ -19,8 +19,8 @@ node() {
             }
             stage('Clean') {
                 sh 'cat  Jenkinsfile'
-                sh './gradlew -v'
-                sh './gradlew --no-daemon clean --profile'
+                sh 'gradle -v'
+                sh 'gradle --no-daemon clean --profile'
             }
 
             stage('Build') {
@@ -36,7 +36,7 @@ node() {
 
 
 def buildPushCommit() {
-    sh './gradlew --no-daemon  buildService --profile'
+    sh 'gradle --no-daemon  buildService --profile'
 }
 
 @NonCPS
@@ -55,7 +55,7 @@ def getSubModules() {
 
 def testPushCommit() {
     try {
-        sh './gradlew --no-daemon  test --profile'
+        sh 'gradle --no-daemon  test --profile'
     } catch (err) {
         echo "${err}"
         throw err
