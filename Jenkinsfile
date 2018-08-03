@@ -21,6 +21,9 @@ node() {
             sh 'gradle -v'
             sh 'ls -al /home/gradle'
             sh 'du -sh /home/gradle'
+            sh 'du -sh /home/gradle/.gradle'
+            sh 'du -sh /home/gradle/gradle_cache'
+
 //            sh 'gradle --no-daemon clean --profile'
         }
 
