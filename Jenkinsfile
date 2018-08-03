@@ -2,7 +2,7 @@
 node() {
 //    docker.image('conghm/gradle-git-4.5.1:alpine').withRun('-v maven_cache_volume:/home/gradle/maven_cache -v gradle_cache_volume:/home/gradle/gradle_cache') { c ->
 //    docker.image('conghm/gradle-git-4.5.1:alpine').withRun() { c ->
-    docker.image('gradle-git-4.5.1:alpine').withRun() { c ->
+    docker.image('gradle:4.9.0-jdk8').withRun() { c ->
         catchError {
             stage('Checkout') {
 //                echo "${env.BRANCH_NAME}"
