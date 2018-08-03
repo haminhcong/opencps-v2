@@ -19,16 +19,18 @@ node() {
         stage('Clean') {
             sh 'cat  Jenkinsfile'
             sh 'gradle -v'
-            sh 'gradle --no-daemon clean --profile'
+            sh 'ls -al /home/gradle'
+            sh 'du -sh /home/gradle'
+//            sh 'gradle --no-daemon clean --profile'
         }
 
-        stage('Build') {
-            buildPushCommit()
-        }
-
-        stage('Test') {
-            testPushCommit()
-        }
+//        stage('Build') {
+//            buildPushCommit()
+//        }
+//
+//        stage('Test') {
+//            testPushCommit()
+//        }
     }
 }
 
