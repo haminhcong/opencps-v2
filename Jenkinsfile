@@ -2,10 +2,8 @@
 node() {
 //    docker.image('conghm/gradle-git-4.5.1:alpine').withRun('-v maven_cache_volume:/home/gradle/maven_cache -v gradle_cache_volume:/home/gradle/gradle_cache') { c ->
 //    docker.image('conghm/gradle-git-4.5.1:alpine').withRun() { c ->
-    docker.image('conghm/gradle-git-4.5.1:alpine').inside('-v "maven_cache_volume:/home/gradle/maven_cache" -v "gradle_cache_volume:/home/gradle/gradle_cache" ') {
+    docker.image('conghm/gradle-git-4.5.1:alpine').inside('-e "GRADLE_HOME:/home/gradle" -v "gradle_cache_volume:/home/gradle/gradle_cache" ') {
         stage('Checkout') {
-//                echo "${env.BRANCH_NAME}"
-//                checkout scm
             checkout changelog: true, poll: true, scm: [
                     $class                           : 'GitSCM',
                     branches                         : scm.branches,
@@ -19,12 +17,7 @@ node() {
         stage('Clean') {
             sh 'cat  Jenkinsfile'
             sh 'gradle -v'
-            sh 'ls -al /home/gradle'
-            sh 'du -sh /home/gradle'
-            sh 'du -sh /home/gradle/.gradle'
-            sh 'du -sh /home/gradle/gradle_cache'
-
-//            sh 'gradle --no-daemon clean --profile'
+            sh 'gradle --no-daemon clean --profile'
         }
 
 //        stage('Build') {
