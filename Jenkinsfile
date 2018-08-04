@@ -15,6 +15,7 @@ node() {
             ]
         }
         stage('Clean') {
+            sh 'sleep 360'
             sh 'cp -ar /home/gradle/gradle_cache/* home/gradle/.gradle'
             sh 'cat  Jenkinsfile'
             sh 'gradle -v'
