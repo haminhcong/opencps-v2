@@ -17,7 +17,8 @@ node() {
         stage('Clean') {
             sh 'cat  Jenkinsfile'
             sh 'gradle -v'
-            sh 'gradle --no-daemon clean --profile'
+            sh 'echo $USER_HOME'
+//            sh 'gradle --no-daemon clean --profile'
         }
 
 //        stage('Build') {
