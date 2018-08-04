@@ -15,18 +15,21 @@ node() {
             ]
         }
         stage('Clean') {
+//            sh 'cp -ar /home/gradle/gradle_cache/* /home/gradle/.gradle/'
             sh 'cat  Jenkinsfile'
             sh 'gradle -v'
-            sh 'gradle --no-daemon clean --profile'
+            sh 'ls -al /home/gradle/.gradle'
+            sh 'du -sh /home/gradle/.gradle'
+//            sh 'gradle --no-daemon clean --profile'
         }
 
-        stage('Build') {
-            buildPushCommit()
-        }
-
-        stage('Test') {
-            testPushCommit()
-        }
+//        stage('Build') {
+//            buildPushCommit()
+//        }
+//
+//        stage('Test') {
+//            testPushCommit()
+//        }
     }
 }
 
@@ -61,16 +64,16 @@ def testPushCommit() {
         echo "get module list"
         echo "${modulesList}"
         echo "${modulesList.size()}"
-        for (def subModule : subModules) {
-            publishHTML([
-                    allowMissing         : true,
-                    alwaysLinkToLastBuild: true,
-                    keepAll              : true,
-                    reportDir            : "modules/${subModule}/build/reports/tests/test/",
-                    reportFiles          : "index.html",
-                    reportTitles         : "Unit test ${subModule} Report"
-            ])
-        }
+//        for (def subModule : subModules) {
+//            publishHTML([
+//                    allowMissing         : true,
+//                    alwaysLinkToLastBuild: true,
+//                    keepAll              : true,
+//                    reportDir            : "modules/${subModule}/build/reports/tests/test/",
+//                    reportFiles          : "index.html",
+//                    reportTitles         : "Unit test ${subModule} Report"
+//            ])
+//        }
     }
 }
 
