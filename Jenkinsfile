@@ -20,16 +20,16 @@ node() {
             sh 'gradle -v'
             sh 'ls -al /home/gradle/.gradle'
             sh 'du -sh /home/gradle/.gradle'
-//            sh 'gradle --no-daemon clean --profile'
+            sh 'gradle --no-daemon clean --profile'
         }
 
-//        stage('Build') {
-//            buildPushCommit()
-//        }
-//
-//        stage('Test') {
-//            testPushCommit()
-//        }
+        stage('Build') {
+            buildPushCommit()
+        }
+
+        stage('Test') {
+            testPushCommit()
+        }
     }
 }
 
