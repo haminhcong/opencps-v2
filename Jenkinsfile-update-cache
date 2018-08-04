@@ -10,12 +10,10 @@ node {
         ]
     }
     stage('Update cache') {
-        docker.image('ntk148v/gradle-git-4.5.1:alpine').withRun('-v maven_cache_volume:/home/gradle/.m2 -v gradle_cache_volume:/home/gradle/.gradle') { c ->
-            catchError {
-                sh './gradlew -v'
-                sh './gradlew --no-daemon clean --profile'
-                sh './gradlew  --no-daemon --build-cache buildService'
-            }
+        docker.image('gradle:4.9.0-jdk8').inside('-v gradle_cache_volume:/home/gradle/.gradle') {
+                sh 'gradle -v'
+                sh 'gradle --no-daemon clean --profile'
+                sh 'gradle  --no-daemon --build-cache buildService'
         }
     }
 }
