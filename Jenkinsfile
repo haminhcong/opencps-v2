@@ -20,6 +20,7 @@ node() {
             sh 'gradle -v'
             sh 'gradle --no-daemon clean --profile'
         }
+        
         stage('Build') {
             buildPushCommit()
         }
