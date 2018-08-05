@@ -65,9 +65,9 @@ def getTestStatuses() {
         // testStatus = "Test Status:\n  Passed: ${passed}, Failed: ${failed} ${testResultAction.failureDiffString}, Skipped: ${skipped}"
         testStatus = "Unit Test Results: Passed: ${passed}, Failed: ${failed} ${testResultAction.failureDiffString}, Skipped: ${skipped}"
 
-        if (failed == 0) {
-            currentBuild.result = 'SUCCESS'
-        }
+        // if (failed == 0) {
+        //     currentBuild.result = 'SUCCESS'
+        // }
     }
     return testStatus
 }
@@ -88,13 +88,6 @@ def isUnitTestsSuccess(){
 def testPushCommit() {
     try {
         sh 'gradle --no-daemon  test --profile'
-        if (env.CHANGE_ID) {
-            pullRequest.createStatus(status: 'success',
-                         context: 'continuous-integration/jenkins/pr-merge/tests',
-                         description: 'Check test',
-                         targetUrl: "${env.JOB_URL}".toString())
-                         
-        }
     } catch (err) {
         echo "${err}"
         throw err
@@ -111,8 +104,8 @@ def testPushCommit() {
                 //             targetUrl: "${env.JOB_URL}${BUILD_NUMBER}/testReport/")
                 pullRequest.createStatus(status: 'success',
                             context: 'Unit test',
-                            description: "Test failed: ${testResultString}".toString(),
-                            targetUrl: "${env.JOB_URL}${BUILD_NUMBER}/testReport/".toString())
+                            description: 'Check test',
+                            targetUrl: "${env.JOB_URL}".toString())
             }
             else{
                 pullRequest.createStatus(status: 'failure',
