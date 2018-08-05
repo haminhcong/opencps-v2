@@ -89,7 +89,7 @@ def testPushCommit() {
         def testResultString = getTestStatuses()
         echo "${testResultString}"
         if (env.CHANGE_ID) {
-            pullRequest.comment('[${testResultString}](${env.JOB_URL}/testReport/)')
+            pullRequest.comment("[${testResultString}](${env.JOB_URL}/testReport/)".toString())
         }
 //        for (def subModule : subModules) {
 //            publishHTML([
