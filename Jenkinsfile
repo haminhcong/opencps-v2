@@ -2,7 +2,11 @@ import hudson.tasks.test.AbstractTestResultAction
 // pipeline for push commit build
 node() {
     if (env.CHANGE_ID) {
-        pullRequest.comment("Checked")
+        pullRequest.createStatus(status: 'success',
+                         context: 'continuous-integration/jenkins/pr-merge/tests',
+                         description: 'All tests are passing',
+                         targetUrl: "${env.JOB_URL}")
+                         
     }
 //    docker.image('conghm/gradle-git-4.5.1:alpine').withRun('-v maven_cache_volume:/home/gradle/maven_cache -v gradle_cache_volume:/home/gradle/gradle_cache') { c ->
 //    docker.image('conghm/gradle-git-4.5.1:alpine').withRun() { c ->
