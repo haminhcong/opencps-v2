@@ -106,13 +106,13 @@ def testPushCommit() {
             pullRequest.comment("[${testResultString}](${env.JOB_URL}${BUILD_NUMBER}/testReport/)")
             if(isUnitTestsSuccess()){
                 pullRequest.createStatus(status: 'success',
-                            context: 'continuous-integration/jenkins/pr-merge/tests',
+                            context: 'Unit test',
                             description: "Test success: ${testResultString}".toString(),
                             targetUrl: "${env.JOB_URL}${BUILD_NUMBER}/testReport/".toString())
             }
             else{
                 pullRequest.createStatus(status: 'failure',
-                            context: 'continuous-integration/jenkins/pr-merge/tests',
+                            context: 'Unit test',
                             description: "Test failed: ${testResultString}".toString(),
                             targetUrl: "${env.JOB_URL}${BUILD_NUMBER}/testReport/".toString())
             }
