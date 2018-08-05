@@ -4,7 +4,7 @@ node() {
     if (env.CHANGE_ID) {
         pullRequest.createStatus(status: 'success',
                          context: 'continuous-integration/jenkins/pr-merge/tests',
-                         description: 'All tests are passing',
+                         description: 'Check test',
                          targetUrl: "${env.JOB_URL}".toString())
                          
     }
@@ -89,7 +89,7 @@ def testPushCommit() {
         def testResultString = getTestStatuses()
         echo "${testResultString}"
         if (env.CHANGE_ID) {
-            pullRequest.comment([testResultString]("${env.JOB_URL}/testReport/"))
+            pullRequest.comment('[${testResultString}]("${env.JOB_URL}/testReport/")')
         }
 //        for (def subModule : subModules) {
 //            publishHTML([
