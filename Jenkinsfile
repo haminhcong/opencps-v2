@@ -105,7 +105,7 @@ def testPushCommit() {
                 pullRequest.createStatus(status: 'success',
                             context: 'Unit test',
                             description: 'Check test',
-                            targetUrl: "${env.JOB_URL}".toString())
+                            targetUrl: "${env.JOB_URL}${BUILD_NUMBER}/testReport/".toString())
             }
             else{
                 pullRequest.createStatus(status: 'failure',
