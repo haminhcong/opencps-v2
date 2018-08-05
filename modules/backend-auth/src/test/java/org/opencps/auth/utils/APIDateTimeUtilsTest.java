@@ -15,6 +15,6 @@ public class APIDateTimeUtilsTest {
     @Test
     public void convertNormalDateToLuceneDateTest() {
         String outputDateString = APIDateTimeUtils.convertNormalDateToLuceneDate(null);
-        Assert.assertEquals(outputDateString, "");
+        Assert.assertEquals(outputDateString, "1");
     }
 }
