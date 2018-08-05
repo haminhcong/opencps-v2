@@ -69,7 +69,8 @@ def getTestStatuses() {
         def failed = testResultAction.failCount
         def skipped = testResultAction.skipCount
         def passed = total - failed - skipped
-        testStatus = "Test Status:\n  Passed: ${passed}, Failed: ${failed} ${testResultAction.failureDiffString}, Skipped: ${skipped}"
+        // testStatus = "Test Status:\n  Passed: ${passed}, Failed: ${failed} ${testResultAction.failureDiffString}, Skipped: ${skipped}"
+        testStatus = "Unit Test Results: Passed: ${passed}, Failed: ${failed} ${testResultAction.failureDiffString}, Skipped: ${skipped}"
 
         if (failed == 0) {
             currentBuild.result = 'SUCCESS'
@@ -89,7 +90,7 @@ def testPushCommit() {
         def testResultString = getTestStatuses()
         echo "${testResultString}"
         if (env.CHANGE_ID) {
-            pullRequest.comment("[${testResultString}](${env.JOB_URL}/testReport/)".toString())
+            pullRequest.comment("[${testResultString}](${env.JOB_URL}${BUILD_NUMBER}/testReport/)")
         }
 //        for (def subModule : subModules) {
 //            publishHTML([
