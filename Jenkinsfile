@@ -81,6 +81,9 @@ def testPushCommit() {
         junit 'modules/**/TEST-*.xml'
         def testResultString = getTestStatuses()
         echo "${testResultString}"
+        if (env.CHANGE_ID) {
+            pullRequest.addLabel("${testResultString}")
+        }
 //        for (def subModule : subModules) {
 //            publishHTML([
 //                    allowMissing         : true,
