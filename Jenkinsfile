@@ -2,7 +2,7 @@ import hudson.tasks.test.AbstractTestResultAction
 // pipeline for push commit build
 node() {
     if (env.CHANGE_ID) {
-		pullRequest.addLabels(["Build Failed"] as String[])
+        pullRequest.comment("Checked")
     }
 //    docker.image('conghm/gradle-git-4.5.1:alpine').withRun('-v maven_cache_volume:/home/gradle/maven_cache -v gradle_cache_volume:/home/gradle/gradle_cache') { c ->
 //    docker.image('conghm/gradle-git-4.5.1:alpine').withRun() { c ->
