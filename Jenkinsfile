@@ -1,13 +1,6 @@
 import hudson.tasks.test.AbstractTestResultAction
 // pipeline for push commit build
 node() {
-    if (env.CHANGE_ID) {
-        pullRequest.createStatus(status: 'success',
-                         context: 'continuous-integration/jenkins/pr-merge/tests',
-                         description: 'Check test',
-                         targetUrl: "${env.JOB_URL}".toString())
-                         
-    }
 //    docker.image('conghm/gradle-git-4.5.1:alpine').withRun('-v maven_cache_volume:/home/gradle/maven_cache -v gradle_cache_volume:/home/gradle/gradle_cache') { c ->
 //    docker.image('conghm/gradle-git-4.5.1:alpine').withRun() { c ->
     docker.image('conghm/gradle:4.9.0-jdk8').inside('-v "gradle_cache_volume:/home/gradle/gradle_cache" ') {
@@ -79,19 +72,53 @@ def getTestStatuses() {
     return testStatus
 }
 
+@NonCPS
+def isUnitTestsSuccess(){
+    AbstractTestResultAction testResultAction = currentBuild.rawBuild.getAction(AbstractTestResultAction.class)
+    if (testResultAction != null) {
+        def failed = testResultAction.failCount
+        if (failed == 0) {
+            return true
+        }
+    }
+    return false
+}
+
+
 def testPushCommit() {
     try {
         sh 'gradle --no-daemon  test --profile'
+        if (env.CHANGE_ID) {
+            pullRequest.createStatus(status: 'success',
+                         context: 'continuous-integration/jenkins/pr-merge/tests',
+                         description: 'Check test',
+                         targetUrl: "${env.JOB_URL}".toString())
+                         
+        }
     } catch (err) {
         echo "${err}"
         throw err
     } finally {
         junit 'modules/**/TEST-*.xml'
-        def testResultString = getTestStatuses()
-        echo "${testResultString}"
         if (env.CHANGE_ID) {
+            def testResultString = getTestStatuses()
+            echo "${testResultString}"
             pullRequest.comment("[${testResultString}](${env.JOB_URL}${BUILD_NUMBER}/testReport/)")
+            if(isUnitTestsSuccess()){
+                pullRequest.createStatus(status: 'success',
+                            context: 'continuous-integration/jenkins/pr-merge/tests',
+                            description: "Test success: ${testResultString}".toString(),
+                            targetUrl: "${env.JOB_URL}${BUILD_NUMBER}/testReport/".toString())
+            }
+            else{
+                pullRequest.createStatus(status: 'failure',
+                            context: 'continuous-integration/jenkins/pr-merge/tests',
+                            description: "Test failed: ${testResultString}".toString(),
+                            targetUrl: "${env.JOB_URL}${BUILD_NUMBER}/testReport/".toString())
+            }
+                         
         }
+
 //        for (def subModule : subModules) {
 //            publishHTML([
 //                    allowMissing         : true,
