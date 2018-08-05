@@ -5,7 +5,7 @@ node() {
         pullRequest.createStatus(status: 'success',
                          context: 'continuous-integration/jenkins/pr-merge/tests',
                          description: 'All tests are passing',
-                         targetUrl: "${env.JOB_URL}")
+                         targetUrl: "${env.JOB_URL}".toString())
                          
     }
 //    docker.image('conghm/gradle-git-4.5.1:alpine').withRun('-v maven_cache_volume:/home/gradle/maven_cache -v gradle_cache_volume:/home/gradle/gradle_cache') { c ->
