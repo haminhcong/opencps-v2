@@ -1,3 +1,4 @@
+import hudson.tasks.test.AbstractTestResultAction
 // pipeline for push commit build
 node() {
 //    docker.image('conghm/gradle-git-4.5.1:alpine').withRun('-v maven_cache_volume:/home/gradle/maven_cache -v gradle_cache_volume:/home/gradle/gradle_cache') { c ->
@@ -52,6 +53,24 @@ def getSubModules() {
     return moduleList
 }
 
+@NonCPS
+def getTestStatuses() {
+    def testStatus = ""
+    AbstractTestResultAction testResultAction = currentBuild.rawBuild.getAction(AbstractTestResultAction.class)
+    if (testResultAction != null) {
+        def total = testResultAction.totalCount
+        def failed = testResultAction.failCount
+        def skipped = testResultAction.skipCount
+        def passed = total - failed - skipped
+        testStatus = "Test Status:\n  Passed: ${passed}, Failed: ${failed} ${testResultAction.failureDiffString}, Skipped: ${skipped}"
+
+        if (failed == 0) {
+            currentBuild.result = 'SUCCESS'
+        }
+    }
+    return testStatus
+}
+
 def testPushCommit() {
     try {
         sh 'gradle --no-daemon  test --profile'
@@ -60,10 +79,8 @@ def testPushCommit() {
         throw err
     } finally {
         junit 'modules/**/TEST-*.xml'
-        def modulesList = getSubModules()
-        echo "get module list"
-        echo "${modulesList}"
-        echo "${modulesList.size()}"
+        def testResultString = getTestStatuses()
+        echo "${testResultString}"
 //        for (def subModule : subModules) {
 //            publishHTML([
 //                    allowMissing         : true,
