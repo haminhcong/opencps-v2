@@ -57,28 +57,38 @@ def buildPullRequest(){
             }
 
             stage('SonarQube analysis') {
-                sh 'gradle --no-daemon jacocoTestReport jacocoRootReport'
-                withSonarQubeEnv('Sonar OpenCPS') {
-                    // requires SonarQube Scanner for Gradle 2.1+
-                    // It's important to add --info because of SONARJNKNS-281
-                    sh 'gradle --no-daemon --info sonarqube'
-                    def props = readProperties  file: 'build/sonar/report-task.txt'
-                    env.SONAR_CE_TASK_URL = props['ceTaskUrl']
-                    env.SONAR_DASHBOAR_URL = props['dashboardUrl']
-                }
+                def sonarQubeID = '123';
+                def sonarQubeGateUrl = '456';
+                def sonarQubeInfo = httpRequest([
+                    acceptType   : 'APPLICATION_JSON',
+                    httpMode     : 'GET',
+                    contentType  : 'APPLICATION_JSON',
+                    // customHeaders: [[name: 'Private-Token', value: gitlab_api_token]],
+                    url          : "http://119.17.200.75:9000/api/measures/search_history?component=m-opencpsv2_opencps-v2_PR-2-RNTOX5QJL736HFHZQ7RSJMNFGJJFJ6D46MGOY6NQF3WORITP62MA&metrics=bugs%2Cduplicated_lines_density%2Cduplicated_blocks%2Ccoverage%2Clines_to_cover%2Cuncovered_lines&ps=1000"
+                ])
+
+                echo "${sonarQubeInfo}"
+
+                // sh 'gradle --no-daemon jacocoTestReport jacocoRootReport'
+                // withSonarQubeEnv('Sonar OpenCPS') {
+                //     // requires SonarQube Scanner for Gradle 2.1+
+                //     // It's important to add --info because of SONARJNKNS-281
+                //     sh 'gradle --no-daemon --info sonarqube'
+                //     def props = readProperties  file: 'build/sonar/report-task.txt'
+                //     env.SONAR_CE_TASK_URL = props['ceTaskUrl']
+                //     env.SONAR_DASHBOAR_URL = props['dashboardUrl']
+                // }
             }
 
             stage("Quality Gate"){
-                timeout(time: 1, unit: 'HOURS') { // Just in case something goes wrong, pipeline will be killed after a timeout
-                    def qg = waitForQualityGate() // Reuse taskId previously collected by withSonarQubeEnv
-                    echo $SONAR_CE_TASK_URL
-                    echo $SONAR_DASHBOAR_URL
-                    if (qg.status != 'OK') {
-                    error "Pipeline aborted due to quality gate failure: ${qg.status}"
-                    }
-
-                    echo "${qg}"
-                }
+                // timeout(time: 1, unit: 'HOURS') { // Just in case something goes wrong, pipeline will be killed after a timeout
+                //     def qg = waitForQualityGate() // Reuse taskId previously collected by withSonarQubeEnv
+                //     // echo $SONAR_CE_TASK_URL
+                //     // echo $SONAR_DASHBOAR_URL
+                //     if (qg.status != 'OK') {
+                //         error "Pipeline aborted due to quality gate failure: ${qg.status}"
+                //     }
+                // }
             }
         }
     }
