@@ -1,8 +1,7 @@
 import hudson.tasks.test.AbstractTestResultAction
 // pipeline for push commit build
-node() {
-//    docker.image('conghm/gradle-git-4.5.1:alpine').withRun('-v maven_cache_volume:/home/gradle/maven_cache -v gradle_cache_volume:/home/gradle/gradle_cache') { c ->
-//    docker.image('conghm/gradle-git-4.5.1:alpine').withRun() { c ->
+node() 
+{
     docker.image('conghm/gradle:4.9.0-jdk8').inside('-v "gradle_cache_volume:/home/gradle/gradle_cache" ') {
         stage('Checkout') {
             checkout changelog: true, poll: true, scm: [
@@ -48,7 +47,6 @@ node() {
                 error "Pipeline aborted due to quality gate failure: ${qg.status}"
                 }
             }
-        }
         }
     }
 }
