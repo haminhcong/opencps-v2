@@ -57,11 +57,11 @@ def buildPullRequest(){
             }
 
             stage('SonarQube analysis') {
-                sh './gradle --no-daemon jacocoTestReport jacocoRootReport'
+                sh 'gradle --no-daemon jacocoTestReport jacocoRootReport'
                 withSonarQubeEnv('Sonar OpenCPS') {
                     // requires SonarQube Scanner for Gradle 2.1+
                     // It's important to add --info because of SONARJNKNS-281
-                    sh './gradle --no-daemon --info sonarqube'
+                    sh 'gradle --no-daemon --info sonarqube'
                     def props = readProperties  file: 'build/sonar/report-task.txt'
                     env.SONAR_CE_TASK_URL = props['ceTaskUrl']
                     env.SONAR_DASHBOAR_URL = props['dashboardUrl']
