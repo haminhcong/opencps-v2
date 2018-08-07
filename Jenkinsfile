@@ -69,26 +69,26 @@ def buildPullRequest(){
 
                 echo "${sonarQubeInfo}"
 
-                // sh 'gradle --no-daemon jacocoTestReport jacocoRootReport'
-                // withSonarQubeEnv('Sonar OpenCPS') {
-                //     // requires SonarQube Scanner for Gradle 2.1+
-                //     // It's important to add --info because of SONARJNKNS-281
-                //     sh 'gradle --no-daemon --info sonarqube'
-                //     def props = readProperties  file: 'build/sonar/report-task.txt'
-                //     env.SONAR_CE_TASK_URL = props['ceTaskUrl']
-                //     env.SONAR_DASHBOAR_URL = props['dashboardUrl']
-                // }
+                sh 'gradle --no-daemon jacocoTestReport jacocoRootReport'
+                withSonarQubeEnv('Sonar OpenCPS') {
+                    // requires SonarQube Scanner for Gradle 2.1+
+                    // It's important to add --info because of SONARJNKNS-281
+                    sh 'gradle --no-daemon --info sonarqube'
+                    def props = readProperties  file: 'build/sonar/report-task.txt'
+                    env.SONAR_CE_TASK_URL = props['ceTaskUrl']
+                    env.SONAR_DASHBOAR_URL = props['dashboardUrl']
+                }
             }
 
             stage("Quality Gate"){
-                // timeout(time: 1, unit: 'HOURS') { // Just in case something goes wrong, pipeline will be killed after a timeout
-                //     def qg = waitForQualityGate() // Reuse taskId previously collected by withSonarQubeEnv
-                //     // echo $SONAR_CE_TASK_URL
-                //     // echo $SONAR_DASHBOAR_URL
-                //     if (qg.status != 'OK') {
-                //         error "Pipeline aborted due to quality gate failure: ${qg.status}"
-                //     }
-                // }
+                timeout(time: 1, unit: 'HOURS') { // Just in case something goes wrong, pipeline will be killed after a timeout
+                    def qg = waitForQualityGate() // Reuse taskId previously collected by withSonarQubeEnv
+                    // echo $SONAR_CE_TASK_URL
+                    // echo $SONAR_DASHBOAR_URL
+                    if (qg.status != 'OK') {
+                        error "Pipeline aborted due to quality gate failure: ${qg.status}"
+                    }
+                }
             }
         }
     }
