@@ -33,6 +33,7 @@ node() {
             }
 
             stage('SonarQube analysis') {
+                sh './gradlew --no-daemon jacocoTestReport jacocoRootReport'
                 withSonarQubeEnv('Sonar OpenCPS') {
                     // requires SonarQube Scanner for Gradle 2.1+
                     // It's important to add --info because of SONARJNKNS-281
