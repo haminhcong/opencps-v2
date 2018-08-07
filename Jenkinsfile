@@ -1,5 +1,6 @@
 import hudson.tasks.test.AbstractTestResultAction
 // pipeline for push commit build
+
 node() 
 {
     docker.image('conghm/gradle:4.9.0-jdk8').inside('-v "gradle_cache_volume:/home/gradle/gradle_cache" ') {
