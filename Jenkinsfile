@@ -2,9 +2,10 @@ import hudson.tasks.test.AbstractTestResultAction
 // pipeline for push commit build
 
 if (env.CHANGE_ID) {
-    buildPushCommit()
-}else{
     buildPullRequest()
+
+}else{
+    buildPushCommit()
 }
 
 def buildPullRequest(){
