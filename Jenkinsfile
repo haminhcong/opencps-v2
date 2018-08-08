@@ -85,8 +85,8 @@ def buildPullRequest() {
                     sh 'gradle --no-daemon --info sonarqube'
 
                     def props = readProperties file: 'build/sonar/report-task.txt'
-                    env.SONAR_CE_TASK_URL = props['ceTaskUrl']
-                    env.SONAR_DASHBOAR_URL = props['dashboardUrl']
+//                    env.SONAR_CE_TASK_URL = props['ceTaskUrl']
+//                    env.SONAR_DASHBOARD_URL = props['dashboardUrl']
                 }
             }
 
@@ -97,7 +97,7 @@ def buildPullRequest() {
 
                     echo "${qg}"
                     // echo $SONAR_CE_TASK_URL
-                    // echo $SONAR_DASHBOAR_URL
+                    // echo $SONAR_DASHBOARD_URL
                     if (qg.status != 'OK') {
                         error "Pipeline aborted due to quality gate failure: ${qg.status}"
                     }
