@@ -66,17 +66,17 @@ def buildPullRequest() {
             }
 
             stage('SonarQube analysis') {
-                def sonarQubeID = '123'
-                def sonarQubeGateUrl = '456'
-                def sonarQubeInfo = httpRequest([
-                        acceptType : 'APPLICATION_JSON',
-                        httpMode   : 'GET',
-                        contentType: 'APPLICATION_JSON',
-                        // customHeaders: [[name: 'Private-Token', value: gitlab_api_token]],
-                        url        : "http://119.17.200.75:9000/api/measures/search_history?component=m-opencpsv2_opencps-v2_PR-2-RNTOX5QJL736HFHZQ7RSJMNFGJJFJ6D46MGOY6NQF3WORITP62MA&metrics=bugs%2Cduplicated_lines_density%2Cduplicated_blocks%2Ccoverage%2Clines_to_cover%2Cuncovered_lines&ps=1000"
-                ])
-
-                echo "${sonarQubeInfo}"
+//                def sonarQubeID = '123'
+//                def sonarQubeGateUrl = '456'
+//                def sonarQubeInfo = httpRequest([
+//                        acceptType : 'APPLICATION_JSON',
+//                        httpMode   : 'GET',
+//                        contentType: 'APPLICATION_JSON',
+//                        // customHeaders: [[name: 'Private-Token', value: gitlab_api_token]],
+//                        url        : "http://119.17.200.75:9000/api/measures/search_history?component=m-opencpsv2_opencps-v2_PR-2-RNTOX5QJL736HFHZQ7RSJMNFGJJFJ6D46MGOY6NQF3WORITP62MA&metrics=bugs%2Cduplicated_lines_density%2Cduplicated_blocks%2Ccoverage%2Clines_to_cover%2Cuncovered_lines&ps=1000"
+//                ])
+//
+//                echo "${sonarQubeInfo}"
 
                 sh 'gradle --no-daemon jacocoTestReport jacocoRootReport'
                 withSonarQubeEnv('Sonar OpenCPS') {
@@ -94,6 +94,8 @@ def buildPullRequest() {
                 timeout(time: 1, unit: 'HOURS') {
                     // Just in case something goes wrong, pipeline will be killed after a timeout
                     def qg = waitForQualityGate() // Reuse taskId previously collected by withSonarQubeEnv
+
+                    echo "${qg}"
                     // echo $SONAR_CE_TASK_URL
                     // echo $SONAR_DASHBOAR_URL
                     if (qg.status != 'OK') {
