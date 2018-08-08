@@ -2,6 +2,15 @@ import hudson.tasks.test.AbstractTestResultAction
 // pipeline for push commit build
 
 if (env.CHANGE_ID) {
+    def sonarQubeInfo = httpRequest([
+                    acceptType   : 'APPLICATION_JSON',
+                    httpMode     : 'GET',
+                    contentType  : 'APPLICATION_JSON',
+                    // customHeaders: [[name: 'Private-Token', value: gitlab_api_token]],
+                    url          : "http://119.17.200.75:9000/api/measures/search_history?component=m-opencpsv2_opencps-v2_PR-2-RNTOX5QJL736HFHZQ7RSJMNFGJJFJ6D46MGOY6NQF3WORITP62MA&metrics=bugs%2Cduplicated_lines_density%2Cduplicated_blocks%2Ccoverage%2Clines_to_cover%2Cuncovered_lines&ps=1000"
+    ])
+
+    echo "${sonarQubeInfo}"
     buildPullRequest()
 
 }else{
