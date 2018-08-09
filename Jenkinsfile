@@ -140,7 +140,6 @@ static def jsonParse(def jsonString) {
 
 }
 
-@NonCPS
 def getSonarQubeMeasureMetric(sonarQubeURL, projectKey, metricKeys) {
     def measureResp = httpRequest([
             acceptType : 'APPLICATION_JSON',
