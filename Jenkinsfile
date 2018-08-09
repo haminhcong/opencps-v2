@@ -131,11 +131,12 @@ def isUnitTestsSuccess() {
     return false
 }
 
-@NonCPS
 def getSonarQubeAnalysisResult(sonarQubeURL, projectKey) {
 
     def metricKeys ="coverage,bugs"
+    def sonarQubeInfo = getSonarQubeMeasureMetric(sonarQubeURL,projectKey,metricKeys)
     echo "${sonarQubeInfo}"
+    return sonarQubeInfo
 }
 
 @NonCPS
@@ -144,7 +145,7 @@ static def jsonParse(def jsonString) {
 
 }
 
-
+@NonCPS
 def getSonarQubeMeasureMetric(sonarQubeURL, projectKey, metricKeys) {
     def measureResp = httpRequest([
             acceptType : 'APPLICATION_JSON',
