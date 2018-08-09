@@ -44,12 +44,12 @@ def buildPullRequest() {
                     echo "${testResultString}"
                     pullRequest.comment("${testResultString}. [Details Report...](${env.JOB_URL}${BUILD_NUMBER}/testReport/)")
                     if (isUnitTestsSuccess()) {
-                        pullRequest.createStatus(status: 'success',
+                        createPullRequestStatus(status: 'success',
                                 context: 'Unit test',
                                 description: 'Test success: ' + testResultString,
                                 targetUrl: "${env.JOB_URL}${BUILD_NUMBER}/testReport/".toString())
                     } else {
-                        pullRequest.createStatus(status: 'failure',
+                        createPullRequestStatus(status: 'failure',
                                 context: 'Unit test: ',
                                 description: "Test failed: ${testResultString}".toString(),
                                 targetUrl: "${env.JOB_URL}${BUILD_NUMBER}/testReport/".toString())
@@ -81,16 +81,16 @@ def buildPullRequest() {
                     echo "${sonarQubeAnalysisResult}"
                     sonarQubeAnalysisResult += "\n SonaQube analysis result details: [SonarQube Dashboard](${SONAR_DASHBOARD_URL})"
                     pullRequest.comment(sonarQubeAnalysisResult)
-                    
+
                     if (qg.status != 'OK') {
-                        pullRequest.createStatus(status: 'failure',
-                                context: 'SonarQube test',
+                        createPullRequestStatus(status: 'failure',
+                                context: 'SonarQube scan',
                                 description: 'Quality gate scan failed',
                                 targetUrl: "${env.SONAR_DASHBOARD_URL}".toString())
                         error "Pipeline aborted due to quality gate failure: ${qg.status}"
                     } else {
-                        pullRequest.createStatus(status: 'success',
-                                context: 'SonarQube test',
+                        createPullRequestStatus(status: 'success',
+                                context: 'SonarQube scan',
                                 description: 'Quality gate scan success',
                                 targetUrl: "${env.SONAR_DASHBOARD_URL}".toString())
                     }
@@ -158,6 +158,11 @@ def getSonarQubeAnalysisResult(sonarQubeURL, projectKey) {
 static def jsonParse(def jsonString) {
     new JsonSlurperClassic().parseText(jsonString)
 
+}
+
+@NonCPS
+def createPullRequestStatus(params) {
+    pullRequest.createStatus(params)
 }
 
 def getSonarQubeMeasureMetric(sonarQubeURL, projectKey, metricKeys) {
