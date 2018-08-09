@@ -7,9 +7,9 @@ if (env.CHANGE_ID) {
     def testSonarQubeUrl = "http://119.17.200.75:9000"
     def testProjectKey = "ncpsv2_opencps-v2_ci-test-4-3ZB3SVIGS3YS4YCUPMSV3ZL7SWZJGK53RYAABC3WYGSXP3IWXAWQ"
     def sonarQubeInfo = getSonarQubeAnalysisResult(testSonarQubeUrl, testProjectKey)
-    echo"Info: "
+    echo "Info: "
     echo "${sonarQubeInfo}"
-    buildPullRequest()
+//    buildPullRequest()
 
 } else {
     buildPushCommit()
