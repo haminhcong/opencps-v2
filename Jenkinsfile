@@ -6,9 +6,10 @@ import hudson.tasks.test.AbstractTestResultAction
 if (env.CHANGE_ID) {
     def testSonarQubeUrl = "http://119.17.200.75:9000"
     def testProjectKey = "ncpsv2_opencps-v2_ci-test-4-3ZB3SVIGS3YS4YCUPMSV3ZL7SWZJGK53RYAABC3WYGSXP3IWXAWQ"
-    def sonarQubeInfo = getSonarQubeAnalysisResult(testSonarQubeUrl, testProjectKey)
+    def sonarQubeAnalysisResult = getSonarQubeAnalysisResult(testSonarQubeUrl, testProjectKey)
     echo "Info: "
-    echo "${sonarQubeInfo}"
+    echo "${sonarQubeAnalysisResult}"
+    pullRequest.comment(sonarQubeAnalysisResult)
 //    buildPullRequest()
 
 } else {
@@ -127,11 +128,32 @@ def isUnitTestsSuccess() {
     return false
 }
 
+static def getMetricEntryByKey(metricResultList, metricKey) {
+    for (metricEntry in metricResultList) {
+        if (metricEntry["metric"] == metricKey) {
+            return metricEntry
+        }
+    }
+    return null
+}
+
+
 def getSonarQubeAnalysisResult(sonarQubeURL, projectKey) {
     def metricKeys = "duplicated_lines,coverage,bugs,uncovered_lines,lines_to_cover"
-    def sonarQubeInfo = getSonarQubeMeasureMetric(sonarQubeURL, projectKey, metricKeys)
-    echo "${sonarQubeInfo}"
-    return "sonarQubeInfo"
+    def metricResultList = getSonarQubeMeasureMetric(sonarQubeURL, projectKey, metricKeys)
+    echo "${metricResultList}"
+    def sonarQubeAnalysisResult = "SonarQube Analysis Results: \n"
+    def uncoveredLinesEntry = getMetricEntryByKey(metricResultList, "uncovered_lines")
+    def linesToCoverEntry = getMetricEntryByKey(metricResultList, "lines_to_cover")
+    def coveragePercentEntry = getMetricEntryByKey(metricResultList, "coverage")
+    def duplicatedLinesEntry = getMetricEntryByKey(metricResultList, "duplicated_lines")
+    def totalBugsEntry = getMetricEntryByKey(metricResultList, "bugs")
+
+    sonarQubeAnalysisResult += "Coverage statistic: ${uncoveredLinesEntry['value']}/${linesToCoverEntry['value']} uncovered - "
+    sonarQubeAnalysisResult += "Coverage percent: ${coveragePercentEntry['value']} % \n"
+    sonarQubeAnalysisResult += "Duplicated lines: ${duplicatedLinesEntry['value']} lines \n"
+    sonarQubeAnalysisResult += "Total bugs found: ${totalBugsEntry['value']} bugs"
+    return sonarQubeAnalysisResult
 }
 
 @NonCPS
