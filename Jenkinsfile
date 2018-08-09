@@ -6,9 +6,11 @@ import hudson.tasks.test.AbstractTestResultAction
 if (env.CHANGE_ID) {
     def testSonarQubeUrl = "http://119.17.200.75:9000"
     def testProjectKey = "ncpsv2_opencps-v2_ci-test-4-3ZB3SVIGS3YS4YCUPMSV3ZL7SWZJGK53RYAABC3WYGSXP3IWXAWQ"
+    def dashboardUrl = "http://119.17.200.75:9000/dashboard/index/ncpsv2_opencps-v2_ci-test-4-3ZB3SVIGS3YS4YCUPMSV3ZL7SWZJGK53RYAABC3WYGSXP3IWXAWQ"
     def sonarQubeAnalysisResult = getSonarQubeAnalysisResult(testSonarQubeUrl, testProjectKey)
     echo "Info: "
     echo "${sonarQubeAnalysisResult}"
+    sonarQubeAnalysisResult += "\n SonaQube analysis result details: ['SonarQube Dashboard'](${dashboardUrl})"
     pullRequest.comment(sonarQubeAnalysisResult)
 //    buildPullRequest()
 
@@ -142,7 +144,7 @@ def getSonarQubeAnalysisResult(sonarQubeURL, projectKey) {
     def metricKeys = "duplicated_lines,coverage,bugs,uncovered_lines,lines_to_cover"
     def metricResultList = getSonarQubeMeasureMetric(sonarQubeURL, projectKey, metricKeys)
     echo "${metricResultList}"
-    def sonarQubeAnalysisResult = "SonarQube Analysis Results: \n"
+    def sonarQubeAnalysisResult = "SonarQube analysis results: \n"
     def uncoveredLinesEntry = getMetricEntryByKey(metricResultList, "uncovered_lines")
     def linesToCoverEntry = getMetricEntryByKey(metricResultList, "lines_to_cover")
     def coveragePercentEntry = getMetricEntryByKey(metricResultList, "coverage")
@@ -150,7 +152,7 @@ def getSonarQubeAnalysisResult(sonarQubeURL, projectKey) {
     def totalBugsEntry = getMetricEntryByKey(metricResultList, "bugs")
 
     sonarQubeAnalysisResult += "Coverage statistic: ${uncoveredLinesEntry['value']}/${linesToCoverEntry['value']} uncovered - "
-    sonarQubeAnalysisResult += "Coverage percent: ${coveragePercentEntry['value']} % \n"
+    sonarQubeAnalysisResult += "Coverage percent: ${coveragePercentEntry['value']}% \n"
     sonarQubeAnalysisResult += "Duplicated lines: ${duplicatedLinesEntry['value']} lines \n"
     sonarQubeAnalysisResult += "Total bugs found: ${totalBugsEntry['value']} bugs"
     return sonarQubeAnalysisResult
