@@ -1,3 +1,4 @@
+import groovy.json.JsonSlurperClassic
 import hudson.tasks.test.AbstractTestResultAction
 
 // pipeline for push commit build
@@ -70,7 +71,7 @@ def buildPullRequest() {
                 withSonarQubeEnv('Sonar OpenCPS') {
                     sh 'gradle --no-daemon --info sonarqube'
 
-                    def props = readProperties  file: 'build/sonar/report-task.txt'
+                    def props = readProperties file: 'build/sonar/report-task.txt'
                     env.SONAR_CE_TASK_ID = props['ceTaskId']
                     env.SONAR_PROJECT_KEY = props['projectKey']
                     env.SONAR_SERVER_URL = props['serverUrl']
@@ -82,36 +83,22 @@ def buildPullRequest() {
                 timeout(time: 1, unit: 'HOURS') {
                     // Just in case something goes wrong, pipeline will be killed after a timeout
                     def qg = waitForQualityGate() // Reuse taskId previously collected by withSonarQubeEnv
-
-
+                    echo "{env.SONAR_SERVER_URL}"
+                    echo "{env.SONAR_PROJECT_KEY}"
+                    def sonarQubeAnalysisResult = getSonarQubeAnalysisResult(SONAR_SERVER_URL, SONAR_PROJECT_KEY);
+                    echo "${sonarQubeAnalysisResult}"
                     if (qg.status != 'OK') {
                         pullRequest.createStatus(status: 'failure',
                                 context: 'SonarQube test',
                                 description: 'Quality gate scan failed',
-                                targetUrl: "${env.SONAR_DASHBOARD_URL}")
+                                targetUrl: "${env.SONAR_DASHBOARD_URL}".toString())
                         error "Pipeline aborted due to quality gate failure: ${qg.status}"
-                    }else{
+                    } else {
                         pullRequest.createStatus(status: 'success',
                                 context: 'SonarQube test',
                                 description: 'Quality gate scan success',
-                                targetUrl: "${env.SONAR_DASHBOARD_URL}")
+                                targetUrl: "${env.SONAR_DASHBOARD_URL}".toString())
                     }
-
-
-
-//                def sonarQubeID = '123'
-//                def sonarQubeGateUrl = '456'
-//                def sonarQubeInfo = httpRequest([
-//                        acceptType : 'APPLICATION_JSON',
-//                        httpMode   : 'GET',
-//                        contentType: 'APPLICATION_JSON',
-//                        // customHeaders: [[name: 'Private-Token', value: gitlab_api_token]],
-//                        url        : "http://119.17.200.75:9000/api/measures/search_history?component=m-opencpsv2_opencps-v2_PR-2-RNTOX5QJL736HFHZQ7RSJMNFGJJFJ6D46MGOY6NQF3WORITP62MA&metrics=bugs%2Cduplicated_lines_density%2Cduplicated_blocks%2Ccoverage%2Clines_to_cover%2Cuncovered_lines&ps=1000"
-//                ])
-//
-//                echo "${sonarQubeInfo}"
-
-
                 }
             }
         }
@@ -144,6 +131,31 @@ def isUnitTestsSuccess() {
     return false
 }
 
+@NonCPS
+def getSonarQubeAnalysisResult(sonarQubeURL, projectKey) {
+
+    def metricKeys ="coverage,bugs"
+    echo "${sonarQubeInfo}"
+}
+
+@NonCPS
+static def jsonParse(def jsonString) {
+    new JsonSlurperClassic().parseText(jsonString)
+
+}
+
+
+def getSonarQubeMeasureMetric(sonarQubeURL, projectKey, metricKeys) {
+    def measureResp = httpRequest([
+            acceptType : 'APPLICATION_JSON',
+            httpMode   : 'GET',
+            contentType: 'APPLICATION_JSON',
+            url        : "${sonarQubeURL}/api/measures/component?metricKeys=${metricKeys}&component=${projectKey}"
+    ])
+    def measureInfo = jsonParse(measureResp.content)
+    return measureInfo['component']['measures']
+
+}
 
 def buildPushCommit() {
     // sh 'gradle --no-daemon  buildService --profile'
