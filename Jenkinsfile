@@ -10,7 +10,7 @@ if (env.CHANGE_ID) {
     def sonarQubeAnalysisResult = getSonarQubeAnalysisResult(testSonarQubeUrl, testProjectKey)
     echo "Info: "
     echo "${sonarQubeAnalysisResult}"
-    sonarQubeAnalysisResult += "\n SonaQube analysis result details: ['SonarQube Dashboard'](${dashboardUrl})"
+    sonarQubeAnalysisResult += "\n SonaQube analysis result details: [SonarQube Dashboard](${dashboardUrl})"
     pullRequest.comment(sonarQubeAnalysisResult)
 //    buildPullRequest()
 
