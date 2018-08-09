@@ -5,7 +5,7 @@ import hudson.tasks.test.AbstractTestResultAction
 
 if (env.CHANGE_ID) {
     buildPullRequest()
-
+    echo "Build Done"
 } else {
     buildPushCommit()
 }
