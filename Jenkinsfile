@@ -4,15 +4,7 @@ import hudson.tasks.test.AbstractTestResultAction
 // pipeline for push commit build
 
 if (env.CHANGE_ID) {
-    def testSonarQubeUrl = "http://119.17.200.75:9000"
-    def testProjectKey = "ncpsv2_opencps-v2_ci-test-4-3ZB3SVIGS3YS4YCUPMSV3ZL7SWZJGK53RYAABC3WYGSXP3IWXAWQ"
-    def dashboardUrl = "http://119.17.200.75:9000/dashboard/index/ncpsv2_opencps-v2_ci-test-4-3ZB3SVIGS3YS4YCUPMSV3ZL7SWZJGK53RYAABC3WYGSXP3IWXAWQ"
-    def sonarQubeAnalysisResult = getSonarQubeAnalysisResult(testSonarQubeUrl, testProjectKey)
-    echo "Info: "
-    echo "${sonarQubeAnalysisResult}"
-    sonarQubeAnalysisResult += "\n SonaQube analysis result details: [SonarQube Dashboard](${dashboardUrl})"
-    pullRequest.comment(sonarQubeAnalysisResult)
-//    buildPullRequest()
+    buildPullRequest()
 
 } else {
     buildPushCommit()
@@ -50,7 +42,7 @@ def buildPullRequest() {
                     junit 'modules/**/TEST-*.xml'
                     def testResultString = getTestStatuses()
                     echo "${testResultString}"
-                    pullRequest.comment("[${testResultString}](${env.JOB_URL}${BUILD_NUMBER}/testReport/)")
+                    pullRequest.comment("${testResultString}. [Details Report...](${env.JOB_URL}${BUILD_NUMBER}/testReport/)")
                     if (isUnitTestsSuccess()) {
                         pullRequest.createStatus(status: 'success',
                                 context: 'Unit test',
@@ -84,8 +76,12 @@ def buildPullRequest() {
                     def qg = waitForQualityGate() // Reuse taskId previously collected by withSonarQubeEnv
                     echo "{env.SONAR_SERVER_URL}"
                     echo "{env.SONAR_PROJECT_KEY}"
+                    echo "{env.SONAR_DASHBOARD_URL}"
                     def sonarQubeAnalysisResult = getSonarQubeAnalysisResult(SONAR_SERVER_URL, SONAR_PROJECT_KEY);
                     echo "${sonarQubeAnalysisResult}"
+                    sonarQubeAnalysisResult += "\n SonaQube analysis result details: [SonarQube Dashboard](${SONAR_DASHBOARD_URL})"
+                    pullRequest.comment(sonarQubeAnalysisResult)
+                    
                     if (qg.status != 'OK') {
                         pullRequest.createStatus(status: 'failure',
                                 context: 'SonarQube test',
