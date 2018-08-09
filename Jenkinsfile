@@ -88,13 +88,13 @@ def buildPullRequest() {
                         pullRequest.createStatus(status: 'failure',
                                 context: 'SonarQube test',
                                 description: 'Quality gate scan failed',
-                                targetUrl: SONAR_DASHBOARD_URL)
+                                targetUrl: "${env.SONAR_DASHBOARD_URL}")
                         error "Pipeline aborted due to quality gate failure: ${qg.status}"
                     }else{
                         pullRequest.createStatus(status: 'success',
                                 context: 'SonarQube test',
                                 description: 'Quality gate scan success',
-                                targetUrl: SONAR_DASHBOARD_URL)
+                                targetUrl: "${env.SONAR_DASHBOARD_URL}")
                     }
 
 
