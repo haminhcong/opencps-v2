@@ -4,15 +4,10 @@ import hudson.tasks.test.AbstractTestResultAction
 // pipeline for push commit build
 
 if (env.CHANGE_ID) {
-    def sonarQubeInfoResp = httpRequest([
-            acceptType : 'APPLICATION_JSON',
-            httpMode   : 'GET',
-            contentType: 'APPLICATION_JSON',
-            // customHeaders: [[name: 'Private-Token', value: gitlab_api_token]],
-            url        : "http://119.17.200.75:9000/api/measures/search_history?component=m-opencpsv2_opencps-v2_PR-2-RNTOX5QJL736HFHZQ7RSJMNFGJJFJ6D46MGOY6NQF3WORITP62MA&metrics=bugs%2Cduplicated_lines_density%2Cduplicated_blocks%2Ccoverage%2Clines_to_cover%2Cuncovered_lines&ps=1000"
-    ])
-
-    echo "${sonarQubeInfoResp.content}"
+    def testSonarQubeUrl = "http://119.17.200.75:9000"
+    def testProjectKey = "ncpsv2_opencps-v2_ci-test-4-3ZB3SVIGS3YS4YCUPMSV3ZL7SWZJGK53RYAABC3WYGSXP3IWXAWQ"
+    def sonarQubeInfo = getSonarQubeAnalysisResult(testSonarQubeUrl,testProjectKey)
+    echo "${sonarQubeInfo}"
     buildPullRequest()
 
 } else {
@@ -133,8 +128,8 @@ def isUnitTestsSuccess() {
 
 def getSonarQubeAnalysisResult(sonarQubeURL, projectKey) {
 
-    def metricKeys ="coverage,bugs"
-    def sonarQubeInfo = getSonarQubeMeasureMetric(sonarQubeURL,projectKey,metricKeys)
+    def metricKeys = "duplicated_lines,coverage,bugs,uncovered_lines,lines_to_cover"
+    def sonarQubeInfo = getSonarQubeMeasureMetric(sonarQubeURL, projectKey, metricKeys)
     echo "${sonarQubeInfo}"
     return sonarQubeInfo
 }
@@ -155,7 +150,6 @@ def getSonarQubeMeasureMetric(sonarQubeURL, projectKey, metricKeys) {
     ])
     def measureInfo = jsonParse(measureResp.content)
     return measureInfo['component']['measures']
-
 }
 
 def buildPushCommit() {
