@@ -23,10 +23,8 @@ def buildPullRequest() {
                         userRemoteConfigs                : scm.userRemoteConfigs
                 ]
                 GIT_REVISION = sh( script: 'git rev-parse HEAD', returnStdout: true )
-                echo "${env}"
                 echo "${GIT_REVISION}"
-                def githubCommitId = GIT_REVISION.substring(0, 7)
-                pullRequest.comment("Current build for commit id: ${githubCommitId}")
+                env.GIT_COMMIT_ID = GIT_REVISION.substring(0, 7)
             }
             stage('Clean') {
                 sh 'cat  Jenkinsfile'
@@ -46,7 +44,7 @@ def buildPullRequest() {
                     junit 'modules/**/TEST-*.xml'
                     def testResultString = getTestStatuses()
                     echo "${testResultString}"
-                    pullRequest.comment("${testResultString}. [Details Report...](${env.JOB_URL}${BUILD_NUMBER}/testReport/)")
+                    pullRequest.comment("${env.GIT_COMMIT_ID}: ${testResultString}. [Details Report...](${env.JOB_URL}${BUILD_NUMBER}/testReport/)")
                 }
             }
 
@@ -73,7 +71,7 @@ def buildPullRequest() {
                     def sonarQubeAnalysisResult = getSonarQubeAnalysisResult(SONAR_SERVER_URL, SONAR_PROJECT_KEY)
                     echo "${sonarQubeAnalysisResult}"
                     sonarQubeAnalysisResult += "\n SonaQube analysis result details: [SonarQube Dashboard](${SONAR_DASHBOARD_URL})"
-                    pullRequest.comment(sonarQubeAnalysisResult)
+                    pullRequest.comment("${env.GIT_COMMIT_ID}: " + sonarQubeAnalysisResult)
                     if (qg.status != 'OK') {
                         error "Pipeline aborted due to quality gate failure: ${qg.status}"
                     }
