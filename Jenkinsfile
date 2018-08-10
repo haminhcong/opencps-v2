@@ -4,7 +4,7 @@ import hudson.tasks.test.AbstractTestResultAction
 // pipeline for push commit build
 
 if (env.CHANGE_ID) {
-    def githubCommitId = env.GIT_COMMIT.substring(0, 6)
+    def githubCommitId = GIT_COMMIT.substring(0, 6)
     pullRequest.comment("Current build for commit id: ${githubCommitId}")
     buildPullRequest()
 } else {
