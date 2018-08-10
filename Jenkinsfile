@@ -22,7 +22,7 @@ def buildPullRequest() {
                                                              shallow  : false, timeout: 75]],
                         userRemoteConfigs                : scm.userRemoteConfigs
                 ]
-                def githubCommitId = GIT_COMMIT.substring(0, 6)
+                def githubCommitId = env.GIT_COMMIT.substring(0, 6)
                 pullRequest.comment("Current build for commit id: ${githubCommitId}")
             }
             stage('Clean') {
