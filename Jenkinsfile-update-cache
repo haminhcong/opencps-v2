@@ -1,0 +1,13 @@
+node {
+    stage('Preparation & Checkout') {
+        checkout scm
+    }
+    stage('Update cache') {
+        docker.image('gradle:4.9.0-jdk8').inside('-v gradle_cache_volume:/home/gradle/.gradle') {
+                sh 'gradle -v'
+                sh 'gradle --no-daemon clean --profile'
+                sh 'gradle  --no-daemon --build-cache buildService'
+                sh 'gradle --no-daemon  test --profile'
+        }
+    }
+}
