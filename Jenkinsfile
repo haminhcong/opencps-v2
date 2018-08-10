@@ -82,16 +82,16 @@ def buildPullRequest() {
                     pullRequest.comment(sonarQubeAnalysisResult)
 
                     if (qg.status != 'OK') {
-                        createPullRequestStatus(status: 'failure',
-                                context: 'SonarQube scan',
-                                description: 'Quality gate scan failed',
-                                targetUrl: "${env.SONAR_DASHBOARD_URL}".toString())
+                        //createPullRequestStatus(status: 'failure',
+                        //        context: 'SonarQube scan',
+                        //        description: 'Quality gate scan failed',
+                        //        targetUrl: "${env.SONAR_DASHBOARD_URL}".toString())
                         error "Pipeline aborted due to quality gate failure: ${qg.status}"
                     } else {
-                        createPullRequestStatus(status: 'success',
-                                context: 'SonarQube scan',
-                                description: 'Quality gate scan success',
-                                targetUrl: "${env.SONAR_DASHBOARD_URL}".toString())
+                        //createPullRequestStatus(status: 'success',
+                        //        context: 'SonarQube scan',
+                        //        description: 'Quality gate scan success',
+                        //        targetUrl: "${env.SONAR_DASHBOARD_URL}".toString())
                     }
                 }
             }
