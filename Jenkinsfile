@@ -22,6 +22,8 @@ def buildPullRequest() {
                                                              shallow  : false, timeout: 75]],
                         userRemoteConfigs                : scm.userRemoteConfigs
                 ]
+                echo "${env.BUILD_NUMBER}"
+                echo "${env.GIT_COMMIT}"
                 def githubCommitId = env.GIT_COMMIT.substring(0, 6)
                 pullRequest.comment("Current build for commit id: ${githubCommitId}")
             }
