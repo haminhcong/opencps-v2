@@ -43,17 +43,6 @@ def buildPullRequest() {
                     def testResultString = getTestStatuses()
                     echo "${testResultString}"
                     pullRequest.comment("${testResultString}. [Details Report...](${env.JOB_URL}${BUILD_NUMBER}/testReport/)")
-                    if (isUnitTestsSuccess()) {
-                        createPullRequestStatus(status: 'success',
-                                context: 'Unit test',
-                                description: 'Test success: ' + testResultString,
-                                targetUrl: "${env.JOB_URL}${BUILD_NUMBER}/testReport/".toString())
-                    } else {
-                        createPullRequestStatus(status: 'failure',
-                                context: 'Unit test: ',
-                                description: "Test failed: ${testResultString}".toString(),
-                                targetUrl: "${env.JOB_URL}${BUILD_NUMBER}/testReport/".toString())
-                    }
                 }
             }
 
@@ -81,18 +70,8 @@ def buildPullRequest() {
                     echo "${sonarQubeAnalysisResult}"
                     sonarQubeAnalysisResult += "\n SonaQube analysis result details: [SonarQube Dashboard](${SONAR_DASHBOARD_URL})"
                     pullRequest.comment(sonarQubeAnalysisResult)
-
                     if (qg.status != 'OK') {
-                        createPullRequestStatus(status: 'failure',
-                                context: 'SonarQube scan',
-                                description: 'Quality gate scan failed',
-                                targetUrl: "${env.SONAR_DASHBOARD_URL}".toString())
                         error "Pipeline aborted due to quality gate failure: ${qg.status}"
-                    } else {
-                        createPullRequestStatus(status: 'success',
-                                context: 'SonarQube scan',
-                                description: 'Quality gate scan success',
-                                targetUrl: "${env.SONAR_DASHBOARD_URL}".toString())
                     }
                 }
             }
