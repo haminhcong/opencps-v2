@@ -22,9 +22,10 @@ def buildPullRequest() {
                                                              shallow  : false, timeout: 75]],
                         userRemoteConfigs                : scm.userRemoteConfigs
                 ]
-                echo "${env.BUILD_NUMBER}"
-                echo "${env.GIT_COMMIT}"
-                def githubCommitId = env.GIT_COMMIT.substring(0, 6)
+                GIT_REVISION = sh( script: 'git rev-parse HEAD', returnStdout: true )
+                echo "${env}"
+                echo "${GIT_REVISION}"
+                def githubCommitId = GIT_REVISION.substring(0, 6)
                 pullRequest.comment("Current build for commit id: ${githubCommitId}")
             }
             stage('Clean') {
