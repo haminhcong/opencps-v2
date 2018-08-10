@@ -4,6 +4,7 @@ import hudson.tasks.test.AbstractTestResultAction
 // pipeline for push commit build
 
 if (env.CHANGE_ID) {
+    pullRequest.comment("Check comment")
     buildPullRequest()
 } else {
     buildPushCommit()
@@ -76,7 +77,7 @@ def buildPullRequest() {
                     echo "{env.SONAR_SERVER_URL}"
                     echo "{env.SONAR_PROJECT_KEY}"
                     echo "{env.SONAR_DASHBOARD_URL}"
-                    def sonarQubeAnalysisResult = getSonarQubeAnalysisResult(SONAR_SERVER_URL, SONAR_PROJECT_KEY);
+                    def sonarQubeAnalysisResult = getSonarQubeAnalysisResult(SONAR_SERVER_URL, SONAR_PROJECT_KEY)
                     echo "${sonarQubeAnalysisResult}"
                     sonarQubeAnalysisResult += "\n SonaQube analysis result details: [SonarQube Dashboard](${SONAR_DASHBOARD_URL})"
                     pullRequest.comment(sonarQubeAnalysisResult)
