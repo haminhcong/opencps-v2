@@ -48,6 +48,14 @@ sourceSets {
 	}
 }
 
+test {
+    reports {
+        junitXml.enabled = true
+        html.enabled = true
+    }
+}
+
+
 sourceSets {
 	main {
 		java {
