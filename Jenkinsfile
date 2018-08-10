@@ -1,56 +1,84 @@
+import groovy.json.JsonSlurperClassic
 import hudson.tasks.test.AbstractTestResultAction
+
 // pipeline for push commit build
-node() {
-//    docker.image('conghm/gradle-git-4.5.1:alpine').withRun('-v maven_cache_volume:/home/gradle/maven_cache -v gradle_cache_volume:/home/gradle/gradle_cache') { c ->
-//    docker.image('conghm/gradle-git-4.5.1:alpine').withRun() { c ->
-    docker.image('conghm/gradle:4.9.0-jdk8').inside('-v "gradle_cache_volume:/home/gradle/gradle_cache" ') {
-        stage('Checkout') {
-            checkout changelog: true, poll: true, scm: [
-                    $class                           : 'GitSCM',
-                    branches                         : scm.branches,
-                    doGenerateSubmoduleConfigurations: scm.doGenerateSubmoduleConfigurations,
-                    extensions                       : [[$class   : 'CloneOption',
-                                                         reference: '/home/hieule/conghm-opencps-v2-local/opencps-v2.git',
-                                                         shallow  : false, timeout: 75]],
-                    userRemoteConfigs                : scm.userRemoteConfigs
-            ]
-        }
-        stage('Clean') {
-//            sh 'cp -ar /home/gradle/gradle_cache/* /home/gradle/.gradle/'
-            sh 'cat  Jenkinsfile'
-            sh 'gradle -v'
-            sh 'ls -al /home/gradle/.gradle'
-            sh 'du -sh /home/gradle/.gradle'
-            sh 'gradle --no-daemon clean --profile'
-        }
 
-        stage('Build') {
-            buildPushCommit()
-        }
-
-        stage('Test') {
-            testPushCommit()
-        }
-    }
+if (env.CHANGE_ID) {
+    buildPullRequest()
+} else {
+    buildPushCommit()
 }
 
+def buildPullRequest() {
+    node() {
+        docker.image('conghm/gradle:4.9.0-jdk8').inside('-v "gradle_cache_volume:/home/gradle/gradle_cache" ') {
+            stage('Checkout') {
+                checkout changelog: true, poll: true, scm: [
+                        $class                           : 'GitSCM',
+                        branches                         : scm.branches,
+                        doGenerateSubmoduleConfigurations: scm.doGenerateSubmoduleConfigurations,
+                        extensions                       : [[$class   : 'CloneOption',
+                                                             reference: '/home/hieule/conghm-opencps-v2-local/opencps-v2.git',
+                                                             shallow  : false, timeout: 75]],
+                        userRemoteConfigs                : scm.userRemoteConfigs
+                ]
+                GIT_REVISION = sh( script: 'git rev-parse HEAD', returnStdout: true )
+                echo "${GIT_REVISION}"
+                env.GIT_COMMIT_ID = GIT_REVISION.substring(0, 7)
+            }
+            stage('Clean') {
+                sh 'cat  Jenkinsfile'
+                sh 'gradle -v'
+                sh 'gradle --no-daemon clean --profile'
+            }
+            stage('Build') {
+                sh 'gradle --no-daemon  buildService --profile'
+            }
+            stage('Test') {
+                try {
+                    sh 'gradle --no-daemon  test --profile'
+                } catch (err) {
+                    echo "${err}"
+                    throw err
+                } finally {
+                    junit 'modules/**/TEST-*.xml'
+                    def testResultString = getTestStatuses()
+                    echo "${testResultString}"
+                    pullRequest.comment("${env.GIT_COMMIT_ID}: ${testResultString}. [Details Report...](${env.JOB_URL}${BUILD_NUMBER}/testReport/)")
+                }
+            }
 
-def buildPushCommit() {
-    sh 'gradle --no-daemon  buildService --profile'
-}
+            stage('SonarQube analysis') {
+                sh 'gradle --no-daemon jacocoTestReport jacocoRootReport'
+                withSonarQubeEnv('Sonar OpenCPS') {
+                    sh 'gradle --no-daemon --info sonarqube'
 
-@NonCPS
-def getSubModules() {
-    def moduleList = []
-    new File("${workspace}/modules").eachDir() { dirName ->
-        if (dirName.name.contains("backend") || dirName.name.contains("frontend") || dirName.name.contains("opencps")) {
-            def testReportFile = new File("${dirName.getPath()}/build/reports/tests/test/index.html")
-            if (testReportFile.exists()) {
-                moduleList.add(dirName.getName())
+                    def props = readProperties file: 'build/sonar/report-task.txt'
+                    env.SONAR_CE_TASK_ID = props['ceTaskId']
+                    env.SONAR_PROJECT_KEY = props['projectKey']
+                    env.SONAR_SERVER_URL = props['serverUrl']
+                    env.SONAR_DASHBOARD_URL = props['dashboardUrl']
+                }
+            }
+
+            stage("Quality Gate") {
+                timeout(time: 1, unit: 'HOURS') {
+                    // Just in case something goes wrong, pipeline will be killed after a timeout
+                    def qg = waitForQualityGate() // Reuse taskId previously collected by withSonarQubeEnv
+                    echo "{env.SONAR_SERVER_URL}"
+                    echo "{env.SONAR_PROJECT_KEY}"
+                    echo "{env.SONAR_DASHBOARD_URL}"
+                    def sonarQubeAnalysisResult = getSonarQubeAnalysisResult(SONAR_SERVER_URL, SONAR_PROJECT_KEY)
+                    echo "${sonarQubeAnalysisResult}"
+                    sonarQubeAnalysisResult += "\n SonaQube analysis result details: [SonarQube Dashboard](${SONAR_DASHBOARD_URL})"
+                    pullRequest.comment("${env.GIT_COMMIT_ID}: " + sonarQubeAnalysisResult)
+                    if (qg.status != 'OK') {
+                        error "Pipeline aborted due to quality gate failure: ${qg.status}"
+                    }
+                }
             }
         }
     }
-    return moduleList
 }
 
 @NonCPS
@@ -62,18 +90,13 @@ def getTestStatuses() {
         def failed = testResultAction.failCount
         def skipped = testResultAction.skipCount
         def passed = total - failed - skipped
-        // testStatus = "Test Status:\n  Passed: ${passed}, Failed: ${failed} ${testResultAction.failureDiffString}, Skipped: ${skipped}"
         testStatus = "Unit Test Results: Passed: ${passed}, Failed: ${failed} ${testResultAction.failureDiffString}, Skipped: ${skipped}"
-
-        // if (failed == 0) {
-        //     currentBuild.result = 'SUCCESS'
-        // }
     }
     return testStatus
 }
 
 @NonCPS
-def isUnitTestsSuccess(){
+def isUnitTestsSuccess() {
     AbstractTestResultAction testResultAction = currentBuild.rawBuild.getAction(AbstractTestResultAction.class)
     if (testResultAction != null) {
         def failed = testResultAction.failCount
@@ -84,66 +107,57 @@ def isUnitTestsSuccess(){
     return false
 }
 
-
-def testPushCommit() {
-    try {
-        sh 'gradle --no-daemon  test --profile'
-    } catch (err) {
-        echo "${err}"
-        throw err
-    } finally {
-        junit 'modules/**/TEST-*.xml'
-        if (env.CHANGE_ID) {
-            def testResultString = getTestStatuses()
-            echo "${testResultString}"
-            pullRequest.comment("[${testResultString}](${env.JOB_URL}${BUILD_NUMBER}/testReport/)")
-            if(isUnitTestsSuccess()){
-                // pullRequest.createStatus(status: 'success',
-                //             context: 'Unit test',
-                //             description: "Test success: ${testResultString}".toString(),
-                //             targetUrl: "${env.JOB_URL}${BUILD_NUMBER}/testReport/")
-                pullRequest.createStatus(status: 'success',
-                            context: 'Unit test',
-                            description: 'Test success ' + testResultString,
-                            targetUrl: "${env.JOB_URL}${BUILD_NUMBER}/testReport/".toString())
-            }
-            else{
-                pullRequest.createStatus(status: 'failure',
-                            context: 'Unit test: ',
-                            description: "Test failed: ${testResultString}".toString(),
-                            targetUrl: "${env.JOB_URL}${BUILD_NUMBER}/testReport/".toString())
-            }
-                         
+static def getMetricEntryByKey(metricResultList, metricKey) {
+    for (metricEntry in metricResultList) {
+        if (metricEntry["metric"] == metricKey) {
+            return metricEntry
         }
-
-//        for (def subModule : subModules) {
-//            publishHTML([
-//                    allowMissing         : true,
-//                    alwaysLinkToLastBuild: true,
-//                    keepAll              : true,
-//                    reportDir            : "modules/${subModule}/build/reports/tests/test/",
-//                    reportFiles          : "index.html",
-//                    reportTitles         : "Unit test ${subModule} Report"
-//            ])
-//        }
     }
+    return null
 }
 
-//def htmlReports = ""
-//def currentDir = new File("modules")
-//currentDir.eachFileRecurse(FileType.DIRECTORIES) { dirName ->
-//    if (dirName.name.contains("backend") || dirName.name.contains("frontend") || dirName.name.contains("opencps")) {
-//        htmlReports += dirName.name + "/reports/tests/test/index.html"
-//    }
-//}
-//if (htmlReports.length() >= 1) {
-//    htmlReports = htmlReports.substring(0, htmlReports.length() - 1);
-//}
-//echo "${htmlReports}"
-//publishHTML([
-//        allowMissing: true, alwaysLinkToLastBuild: false,
-//        keepAll     : false, reportDir: 'modules',
-//        reportFiles : htmlReports,
-//        reportName  : 'HTML Report', reportTitles: ''
-//])
-//
+
+def getSonarQubeAnalysisResult(sonarQubeURL, projectKey) {
+    def metricKeys = "duplicated_lines,coverage,bugs,uncovered_lines,lines_to_cover"
+    def metricResultList = getSonarQubeMeasureMetric(sonarQubeURL, projectKey, metricKeys)
+    echo "${metricResultList}"
+    def sonarQubeAnalysisResult = "SonarQube analysis results: \n"
+    def uncoveredLinesEntry = getMetricEntryByKey(metricResultList, "uncovered_lines")
+    def linesToCoverEntry = getMetricEntryByKey(metricResultList, "lines_to_cover")
+    def coveragePercentEntry = getMetricEntryByKey(metricResultList, "coverage")
+    def duplicatedLinesEntry = getMetricEntryByKey(metricResultList, "duplicated_lines")
+    def totalBugsEntry = getMetricEntryByKey(metricResultList, "bugs")
+
+    sonarQubeAnalysisResult += "Coverage statistic: ${uncoveredLinesEntry['value']}/${linesToCoverEntry['value']} uncovered - "
+    sonarQubeAnalysisResult += "Coverage percent: ${coveragePercentEntry['value']}% \n"
+    sonarQubeAnalysisResult += "Duplicated lines: ${duplicatedLinesEntry['value']} lines \n"
+    sonarQubeAnalysisResult += "Total bugs found: ${totalBugsEntry['value']} bugs"
+    return sonarQubeAnalysisResult
+}
+
+@NonCPS
+static def jsonParse(def jsonString) {
+    new JsonSlurperClassic().parseText(jsonString)
+
+}
+
+@NonCPS
+def createPullRequestStatus(params) {
+    pullRequest.createStatus(params)
+}
+
+def getSonarQubeMeasureMetric(sonarQubeURL, projectKey, metricKeys) {
+    def measureResp = httpRequest([
+            acceptType : 'APPLICATION_JSON',
+            httpMode   : 'GET',
+            contentType: 'APPLICATION_JSON',
+            url        : "${sonarQubeURL}/api/measures/component?metricKeys=${metricKeys}&component=${projectKey}"
+    ])
+    def measureInfo = jsonParse(measureResp.content)
+    echo "${measureInfo}"
+    return measureInfo['component']['measures']
+}
+
+def buildPushCommit() {
+    // sh 'gradle --no-daemon  buildService --profile'
+}
