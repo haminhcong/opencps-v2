@@ -154,8 +154,11 @@ def createPullRequestStatus(params) {
 
 
 def determineRepoName() {
-    echo"${scm.getUserRemoteConfigs()[0].getUrl().tokenize('/')}"
-    return scm.getUserRemoteConfigs()[0].getUrl().tokenize('/').last().split("\\.")[0]
+    echo "${scm.getUserRemoteConfigs()[0].getUrl().tokenize('/')}"
+    def repo_name_arr = scm.getUserRemoteConfigs()[0].getUrl().tokenize('/')
+    def repo_user_name = repo_name_arr[repo_name_arr.size-- 2]
+    def repo_name = repo_name_arr.last().split("\\.")[0]
+    return repo_user_name + "/" + repo_name
 }
 
 def getSonarQubeMeasureMetric(sonarQubeURL, projectKey, metricKeys) {
