@@ -154,6 +154,7 @@ def createPullRequestStatus(params) {
 
 
 def determineRepoName() {
+    echo"${scm.getUserRemoteConfigs()[0].getUrl().tokenize('/')}"
     return scm.getUserRemoteConfigs()[0].getUrl().tokenize('/').last().split("\\.")[0]
 }
 
