@@ -25,7 +25,6 @@ def buildPullRequest() {
                 ]
                 GIT_REVISION = sh(script: 'git rev-parse HEAD', returnStdout: true)
                 echo "${GIT_REVISION}"
-                //set git-project-name
                 env.GIT_PROJECT_NAME = determineRepoName()
                 env.SONA_QUBE_PROJECT_KEY = env.GIT_PROJECT_NAME + ":" + env.BRANCH_NAME
                 echo "${env.SONA_QUBE_PROJECT_KEY}"
