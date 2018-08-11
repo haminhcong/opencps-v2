@@ -27,7 +27,7 @@ def buildPullRequest() {
                 echo "${GIT_REVISION}"
                 //set git-project-name
                 env.GIT_PROJECT_NAME = determineRepoName()
-                env.SONA_QUBE_PROJECT_KEY = env.GIT_PROJECT_NAME + "/" + env.BRANCH_NAME
+                env.SONA_QUBE_PROJECT_KEY = env.GIT_PROJECT_NAME + ":" + env.BRANCH_NAME
                 echo "${env.SONA_QUBE_PROJECT_KEY}"
                 echo sh(script: 'env|sort', returnStdout: true)
                 env.GIT_COMMIT_ID = GIT_REVISION.substring(0, 7)
@@ -158,7 +158,7 @@ def determineRepoName() {
     def repo_name_arr = scm.getUserRemoteConfigs()[0].getUrl().tokenize('/')
     def repo_user_name = repo_name_arr[repo_name_arr.size() - 2]
     def repo_name = repo_name_arr.last().split("\\.")[0]
-    return repo_user_name + "/" + repo_name
+    return repo_user_name + ":" + repo_name
 }
 
 def getSonarQubeMeasureMetric(sonarQubeURL, projectKey, metricKeys) {
