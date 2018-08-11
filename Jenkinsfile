@@ -27,62 +27,62 @@ def buildPullRequest() {
                 echo "${GIT_REVISION}"
                 //set git-project-name
                 env.GIT_PROJECT_NAME = determineRepoName()
-                env.SONA_QUBE_PROJECT_KEY = env.GIT_PROJECT_NAME + "-" + env.BRANCH_NAME
+                env.SONA_QUBE_PROJECT_KEY = env.GIT_PROJECT_NAME + "/" + env.BRANCH_NAME
                 echo "${env.SONA_QUBE_PROJECT_KEY}"
                 echo sh(script: 'env|sort', returnStdout: true)
                 env.GIT_COMMIT_ID = GIT_REVISION.substring(0, 7)
             }
-//            stage('Clean') {
-//                sh 'cat  Jenkinsfile'
-//                sh 'gradle -v'
-//                sh 'gradle --no-daemon clean --profile'
-//            }
-//            stage('Build') {
-//                sh 'gradle --no-daemon  buildService --profile'
-//            }
-//            stage('Test') {
-//                try {
-//                    sh 'gradle --no-daemon  test --profile'
-//                } catch (err) {
-//                    echo "${err}"
-//                    throw err
-//                } finally {
-//                    junit 'modules/**/TEST-*.xml'
-//                    def testResultString = getTestStatuses()
-//                    echo "${testResultString}"
-//                    pullRequest.comment("${env.GIT_COMMIT_ID}: ${testResultString}. [Details Report...](${env.JOB_URL}${BUILD_NUMBER}/testReport/)")
-//                }
-//            }
-//
-//            stage('SonarQube analysis') {
-//                sh 'gradle --no-daemon jacocoTestReport jacocoRootReport'
-//                withSonarQubeEnv('Sonar OpenCPS') {
-//                    sh "gradle --no-daemon --info sonarqube -Dsonar.projectName=${}"
-//
-//                    def props = readProperties file: 'build/sonar/report-task.txt'
-//                    env.SONAR_CE_TASK_ID = props['ceTaskId']
-//                    env.SONAR_PROJECT_KEY = props['projectKey']
-//                    env.SONAR_SERVER_URL = props['serverUrl']
-//                    env.SONAR_DASHBOARD_URL = props['dashboardUrl']
-//                }
-//            }
-//
-//            stage("Quality Gate") {
-//                timeout(time: 1, unit: 'HOURS') {
-//                    // Just in case something goes wrong, pipeline will be killed after a timeout
-//                    def qg = waitForQualityGate() // Reuse taskId previously collected by withSonarQubeEnv
-//                    echo "{env.SONAR_SERVER_URL}"
-//                    echo "{env.SONAR_PROJECT_KEY}"
-//                    echo "{env.SONAR_DASHBOARD_URL}"
-//                    def sonarQubeAnalysisResult = getSonarQubeAnalysisResult(SONAR_SERVER_URL, SONAR_PROJECT_KEY)
-//                    echo "${sonarQubeAnalysisResult}"
-//                    sonarQubeAnalysisResult += "\n SonaQube analysis result details: [SonarQube Dashboard](${SONAR_DASHBOARD_URL})"
-//                    pullRequest.comment("${env.GIT_COMMIT_ID}: " + sonarQubeAnalysisResult)
-//                    if (qg.status != 'OK') {
-//                        error "Pipeline aborted due to quality gate failure: ${qg.status}"
-//                    }
-//                }
-//            }
+            stage('Clean') {
+                sh 'cat  Jenkinsfile'
+                sh 'gradle -v'
+                sh 'gradle --no-daemon clean --profile'
+            }
+            stage('Build') {
+                sh 'gradle --no-daemon  buildService --profile'
+            }
+            stage('Test') {
+                try {
+                    sh 'gradle --no-daemon  test --profile'
+                } catch (err) {
+                    echo "${err}"
+                    throw err
+                } finally {
+                    junit 'modules/**/TEST-*.xml'
+                    def testResultString = getTestStatuses()
+                    echo "${testResultString}"
+                    pullRequest.comment("${env.GIT_COMMIT_ID}: ${testResultString}. [Details Report...](${env.JOB_URL}${BUILD_NUMBER}/testReport/)")
+                }
+            }
+
+            stage('SonarQube analysis') {
+                sh 'gradle --no-daemon jacocoTestReport jacocoRootReport'
+                withSonarQubeEnv('Sonar OpenCPS') {
+                    sh "gradle --no-daemon --info sonarqube -Dsonar.projectName=${env.SONA_QUBE_PROJECT_KEY} -Dsonar.projectKey=${env.SONA_QUBE_PROJECT_KEY}"
+
+                    def props = readProperties file: 'build/sonar/report-task.txt'
+                    env.SONAR_CE_TASK_ID = props['ceTaskId']
+                    env.SONAR_PROJECT_KEY = props['projectKey']
+                    env.SONAR_SERVER_URL = props['serverUrl']
+                    env.SONAR_DASHBOARD_URL = props['dashboardUrl']
+                }
+            }
+
+            stage("Quality Gate") {
+                timeout(time: 1, unit: 'HOURS') {
+                    // Just in case something goes wrong, pipeline will be killed after a timeout
+                    def qg = waitForQualityGate() // Reuse taskId previously collected by withSonarQubeEnv
+                    echo "{env.SONAR_SERVER_URL}"
+                    echo "{env.SONAR_PROJECT_KEY}"
+                    echo "{env.SONAR_DASHBOARD_URL}"
+                    def sonarQubeAnalysisResult = getSonarQubeAnalysisResult(SONAR_SERVER_URL, SONAR_PROJECT_KEY)
+                    echo "${sonarQubeAnalysisResult}"
+                    sonarQubeAnalysisResult += "\n SonaQube analysis result details: [SonarQube Dashboard](${SONAR_DASHBOARD_URL})"
+                    pullRequest.comment("${env.GIT_COMMIT_ID}: " + sonarQubeAnalysisResult)
+                    if (qg.status != 'OK') {
+                        error "Pipeline aborted due to quality gate failure: ${qg.status}"
+                    }
+                }
+            }
         }
     }
 }
