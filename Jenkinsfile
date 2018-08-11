@@ -2,6 +2,7 @@ import groovy.json.JsonSlurperClassic
 import hudson.tasks.test.AbstractTestResultAction
 
 // pipeline for push commit build
+//setup env
 
 if (env.CHANGE_ID) {
     buildPullRequest()
@@ -22,8 +23,12 @@ def buildPullRequest() {
                                                              shallow  : false, timeout: 75]],
                         userRemoteConfigs                : scm.userRemoteConfigs
                 ]
-                GIT_REVISION = sh( script: 'git rev-parse HEAD', returnStdout: true )
+                GIT_REVISION = sh(script: 'git rev-parse HEAD', returnStdout: true)
                 echo "${GIT_REVISION}"
+                env.GIT_PROJECT_NAME = determineRepoName()
+                env.SONA_QUBE_PROJECT_KEY = env.GIT_PROJECT_NAME + ":" + env.BRANCH_NAME
+                echo "${env.SONA_QUBE_PROJECT_KEY}"
+                echo sh(script: 'env|sort', returnStdout: true)
                 env.GIT_COMMIT_ID = GIT_REVISION.substring(0, 7)
             }
             stage('Clean') {
@@ -51,7 +56,7 @@ def buildPullRequest() {
             stage('SonarQube analysis') {
                 sh 'gradle --no-daemon jacocoTestReport jacocoRootReport'
                 withSonarQubeEnv('Sonar OpenCPS') {
-                    sh 'gradle --no-daemon --info sonarqube'
+                    sh "gradle --no-daemon --info sonarqube -Dsonar.projectName=${env.SONA_QUBE_PROJECT_KEY} -Dsonar.projectKey=${env.SONA_QUBE_PROJECT_KEY}"
 
                     def props = readProperties file: 'build/sonar/report-task.txt'
                     env.SONAR_CE_TASK_ID = props['ceTaskId']
@@ -144,6 +149,15 @@ static def jsonParse(def jsonString) {
 @NonCPS
 def createPullRequestStatus(params) {
     pullRequest.createStatus(params)
+}
+
+
+def determineRepoName() {
+    echo "${scm.getUserRemoteConfigs()[0].getUrl().tokenize('/')}"
+    def repo_name_arr = scm.getUserRemoteConfigs()[0].getUrl().tokenize('/')
+    def repo_user_name = repo_name_arr[repo_name_arr.size() - 2]
+    def repo_name = repo_name_arr.last().split("\\.")[0]
+    return repo_user_name + ":" + repo_name
 }
 
 def getSonarQubeMeasureMetric(sonarQubeURL, projectKey, metricKeys) {
