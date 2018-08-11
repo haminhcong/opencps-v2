@@ -2,6 +2,7 @@ import groovy.json.JsonSlurperClassic
 import hudson.tasks.test.AbstractTestResultAction
 
 // pipeline for push commit build
+//setup env
 
 if (env.CHANGE_ID) {
     buildPullRequest()
@@ -22,8 +23,12 @@ def buildPullRequest() {
                                                              shallow  : false, timeout: 75]],
                         userRemoteConfigs                : scm.userRemoteConfigs
                 ]
-                GIT_REVISION = sh( script: 'git rev-parse HEAD', returnStdout: true )
+                GIT_REVISION = sh(script: 'git rev-parse HEAD', returnStdout: true)
                 echo "${GIT_REVISION}"
+                //set git-project-name
+                env.GIT_PROJECT_NAME = determineRepoName()
+                env.SONA_QUBE_PROJECT_KEY = env.GIT_PROJECT_NAME + "-" + env.BRANCH_NAME
+                echo "${env.SONA_QUBE_PROJECT_KEY}"
                 echo sh(script: 'env|sort', returnStdout: true)
                 env.GIT_COMMIT_ID = GIT_REVISION.substring(0, 7)
             }
@@ -145,6 +150,11 @@ static def jsonParse(def jsonString) {
 @NonCPS
 def createPullRequestStatus(params) {
     pullRequest.createStatus(params)
+}
+
+
+def determineRepoName() {
+    return scm.getUserRemoteConfigs()[0].getUrl().tokenize('/').last().split("\\.")[0]
 }
 
 def getSonarQubeMeasureMetric(sonarQubeURL, projectKey, metricKeys) {
