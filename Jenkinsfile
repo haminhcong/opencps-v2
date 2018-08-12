@@ -1,9 +1,6 @@
 import groovy.json.JsonSlurperClassic
 import hudson.tasks.test.AbstractTestResultAction
 
-// pipeline for push commit build
-//setup env
-
 if (env.CHANGE_ID) {
     buildPullRequest()
 } else {
@@ -14,22 +11,11 @@ def buildPullRequest() {
     node() {
         docker.image('conghm/gradle:4.9.0-jdk8').inside('-v "gradle_cache_volume:/home/gradle/gradle_cache" ') {
             stage('Checkout') {
-                checkout changelog: true, poll: true, scm: [
-                        $class                           : 'GitSCM',
-                        branches                         : scm.branches,
-                        doGenerateSubmoduleConfigurations: scm.doGenerateSubmoduleConfigurations,
-                        extensions                       : [[$class   : 'CloneOption',
-                                                             reference: '/home/hieule/conghm-opencps-v2-local/opencps-v2.git',
-                                                             shallow  : false, timeout: 75]],
-                        userRemoteConfigs                : scm.userRemoteConfigs
-                ]
-                GIT_REVISION = sh(script: 'git rev-parse HEAD', returnStdout: true)
-                echo "${GIT_REVISION}"
+                checkoutSCMWithCache()
                 env.GIT_PROJECT_NAME = determineRepoName()
                 env.SONA_QUBE_PROJECT_KEY = env.GIT_PROJECT_NAME + ":" + env.BRANCH_NAME
                 echo "${env.SONA_QUBE_PROJECT_KEY}"
                 echo sh(script: 'env|sort', returnStdout: true)
-                env.GIT_COMMIT_ID = GIT_REVISION.substring(0, 7)
             }
             stage('Clean') {
                 sh 'cat  Jenkinsfile'
@@ -172,6 +158,44 @@ def getSonarQubeMeasureMetric(sonarQubeURL, projectKey, metricKeys) {
     return measureInfo['component']['measures']
 }
 
+
 def buildPushCommit() {
-    // sh 'gradle --no-daemon  buildService --profile'
+    node() {
+        docker.image('conghm/gradle:4.9.0-jdk8').inside('-v "gradle_cache_volume:/home/gradle/gradle_cache" ') {
+            stage('Checkout') {
+                checkoutSCMWithCache()
+            }
+            stage('Clean') {
+                sh 'gradle --no-daemon clean --profile'
+            }
+            stage('Build') {
+                sh 'gradle --no-daemon  buildService --profile'
+            }
+            stage('Test') {
+                try {
+                    sh 'gradle --no-daemon  test --profile'
+                } catch (err) {
+                    echo "${err}"
+                    throw err
+                } finally {
+                    junit 'modules/**/TEST-*.xml'
+                }
+            }
+        }
+    }
+}
+
+
+def checkoutSCMWithCache() {
+    checkout changelog: true, poll: true, scm: [
+            $class                           : 'GitSCM',
+            branches                         : scm.branches,
+            doGenerateSubmoduleConfigurations: scm.doGenerateSubmoduleConfigurations,
+            extensions                       : [[$class   : 'CloneOption',
+                                                 reference: '/home/hieule/conghm-opencps-v2-local/opencps-v2.git',
+                                                 shallow  : false, timeout: 75]],
+            userRemoteConfigs                : scm.userRemoteConfigs
+    ]
+    GIT_REVISION = sh(script: 'git rev-parse HEAD', returnStdout: true)
+    env.GIT_COMMIT_ID = GIT_REVISION.substring(0, 7)
 }
