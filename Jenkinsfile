@@ -13,8 +13,8 @@ def buildPullRequest() {
                 '-v "/home/hieule/git-opencps-v2-local:/home/git_local" ') {
 
             stage('Clean env') {
-                sh "ls -al"
                 sh "rm -rf *"
+                sh "ls -al"
             }
 
             stage('Checkout') {
