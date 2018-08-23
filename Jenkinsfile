@@ -9,7 +9,8 @@ if (env.CHANGE_ID) {
 
 def buildPullRequest() {
     node() {
-        docker.image('opencpsv2/gradle:4.9.0-jdk8').inside('-v "gradle_cache_volume:/home/gradle/gradle_cache" ') {
+        docker.image('opencpsv2/gradle:4.9.0-jdk8').inside('-v "gradle_cache_volume:/home/gradle/gradle_cache"' +
+                '-v "/home/hieule/git-opencps-v2-local:/home/git_local" ') {
             stage('Checkout') {
                 checkoutSCMWithCache()
                 env.GIT_PROJECT_NAME = determineRepoName()
@@ -192,7 +193,7 @@ def checkoutSCMWithCache() {
             branches                         : scm.branches,
             doGenerateSubmoduleConfigurations: scm.doGenerateSubmoduleConfigurations,
             extensions                       : [[$class   : 'CloneOption',
-                                                 reference: '/home/hieule/git-opencps-v2-local/opencps-v2.git',
+                                                 reference: '/home/git_local/opencps-v2.git',
                                                  shallow  : false, timeout: 75]],
             userRemoteConfigs                : scm.userRemoteConfigs
     ]
