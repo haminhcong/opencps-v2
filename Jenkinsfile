@@ -9,7 +9,7 @@ if (env.CHANGE_ID) {
 
 def buildPullRequest() {
     node() {
-        docker.image('conghm/gradle:4.9.0-jdk8').inside('-v "gradle_cache_volume:/home/gradle/gradle_cache" ') {
+        docker.image('opencpsv2/gradle:4.9.0-jdk8').inside('-v "gradle_cache_volume:/home/gradle/gradle_cache" ') {
             stage('Checkout') {
                 checkoutSCMWithCache()
                 env.GIT_PROJECT_NAME = determineRepoName()
@@ -161,7 +161,7 @@ def getSonarQubeMeasureMetric(sonarQubeURL, projectKey, metricKeys) {
 
 def buildPushCommit() {
     node() {
-        docker.image('conghm/gradle:4.9.0-jdk8').inside('-v "gradle_cache_volume:/home/gradle/gradle_cache" ') {
+        docker.image('opencpsv2/gradle:4.9.0-jdk8').inside('-v "gradle_cache_volume:/home/gradle/gradle_cache" ') {
             stage('Checkout') {
                 checkoutSCMWithCache()
             }
@@ -192,7 +192,7 @@ def checkoutSCMWithCache() {
             branches                         : scm.branches,
             doGenerateSubmoduleConfigurations: scm.doGenerateSubmoduleConfigurations,
             extensions                       : [[$class   : 'CloneOption',
-                                                 reference: '/home/hieule/conghm-opencps-v2-local/opencps-v2.git',
+                                                 reference: '/home/hieule/git-opencps-v2-local/opencps-v2.git',
                                                  shallow  : false, timeout: 75]],
             userRemoteConfigs                : scm.userRemoteConfigs
     ]
