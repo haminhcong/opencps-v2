@@ -9,16 +9,10 @@ if (env.CHANGE_ID) {
 
 def buildPullRequest() {
     node() {
-        docker.image('opencpsv2/gradle:4.9.0-jdk8').inside('-v "gradle_cache_volume:/home/gradle/gradle_cache" ' +
-                '-v "/home/hieule/git-opencps-v2-local:/home/git_local" ') {
-//
-//            stage('Clean env') {
-//                sh "rm -rf *"
-//                sh "ls -al"
-//            }
+        docker.image('opencpsv2/gradle:4.9.0-jdk8').inside('-v "gradle_cache_volume:/home/gradle/gradle_cache" ') {
 
             stage('Checkout') {
-                checkoutSCMWithCache()
+                checkoutSCM()
                 env.GIT_PROJECT_NAME = determineRepoName()
                 env.SONA_QUBE_PROJECT_KEY = env.GIT_PROJECT_NAME + ":" + env.BRANCH_NAME
                 echo "${env.SONA_QUBE_PROJECT_KEY}"
@@ -196,18 +190,8 @@ def buildPushCommit() {
 }
 
 
-def checkoutSCMWithCache() {
-    sh "ls -al /home/git_local"
-    checkout changelog: true, poll: true, scm: [
-            $class                           : 'GitSCM',
-            branches                         : scm.branches,
-            doGenerateSubmoduleConfigurations: scm.doGenerateSubmoduleConfigurations,
-            extensions                       : scm.extensions,
-            extensions                       : [[$class   : 'CloneOption',
-                                                 reference: '/home/git_local/opencps-v2.git',
-                                                 shallow  : false, timeout: 75]],
-            userRemoteConfigs                : scm.userRemoteConfigs
-    ]
+def checkoutSCM() {
+    checkout scm
     GIT_REVISION = sh(script: 'git rev-parse HEAD', returnStdout: true)
     env.GIT_COMMIT_ID = GIT_REVISION.substring(0, 7)
 }
