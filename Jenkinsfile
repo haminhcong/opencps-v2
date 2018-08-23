@@ -9,7 +9,7 @@ if (env.CHANGE_ID) {
 
 def buildPullRequest() {
     node() {
-        docker.image('opencpsv2/gradle:4.9.0-jdk8').inside('-v "gradle_cache_volume:/home/gradle/gradle_cache"' +
+        docker.image('opencpsv2/gradle:4.9.0-jdk8').inside('-v "gradle_cache_volume:/home/gradle/gradle_cache" ' +
                 '-v "/home/hieule/git-opencps-v2-local:/home/git_local" ') {
             stage('Checkout') {
                 checkoutSCMWithCache()
