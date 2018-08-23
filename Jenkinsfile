@@ -197,6 +197,7 @@ def buildPushCommit() {
 
 
 def checkoutSCMWithCache() {
+    sh "ls -al /home/git_local"
     checkout changelog: true, poll: true, scm: [
             $class                           : 'GitSCM',
             branches                         : scm.branches,
