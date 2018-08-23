@@ -197,18 +197,16 @@ def buildPushCommit() {
 
 
 def checkoutSCMWithCache() {
-    checkout scm
-//    checkout changelog: true, poll: true, scm: [
-//            $class                           : 'GitSCM',
-//            branches                         : scm.branches,
-//            doGenerateSubmoduleConfigurations: scm.doGenerateSubmoduleConfigurations,
-//            extensions                       : scm.extensions,
-//
-////            extensions                       : [[$class   : 'CloneOption',
-////                                                 reference: '/home/git_local/opencps-v2.git',
-////                                                 shallow  : false, timeout: 75]],
-//            userRemoteConfigs                : scm.userRemoteConfigs
-//    ]
+    checkout changelog: true, poll: true, scm: [
+            $class                           : 'GitSCM',
+            branches                         : scm.branches,
+            doGenerateSubmoduleConfigurations: scm.doGenerateSubmoduleConfigurations,
+            extensions                       : scm.extensions,
+            extensions                       : [[$class   : 'CloneOption',
+                                                 reference: '/home/git_local/opencps-v2.git',
+                                                 shallow  : false, timeout: 75]],
+            userRemoteConfigs                : scm.userRemoteConfigs
+    ]
     GIT_REVISION = sh(script: 'git rev-parse HEAD', returnStdout: true)
     env.GIT_COMMIT_ID = GIT_REVISION.substring(0, 7)
 }
