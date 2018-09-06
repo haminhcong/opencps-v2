@@ -6,6 +6,8 @@ node() {
     stage('Checkout') {
         checkoutSCM()
     }
+    echo "Branch name: ${env.BRANCH_NAME}"
+    echo "Job name: ${env.JOB_NAME}"
     def tag = sh(returnStdout: true, script: "git tag --contains | head -1").trim()
     if (tag) {
 
@@ -13,7 +15,7 @@ node() {
             echo "Build tag started!"
             echo "Tag name: ${tag}"
         }
-        
+
     } else if (env.CHANGE_ID) {
         buildPullRequest()
     } else {
