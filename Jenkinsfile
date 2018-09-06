@@ -1,80 +1,89 @@
 import groovy.json.JsonSlurperClassic
 import hudson.tasks.test.AbstractTestResultAction
 
-if (env.CHANGE_ID) {
-    buildPullRequest()
-} else {
-    buildPushCommit()
+
+node() {
+    stage('Checkout') {
+        checkoutSCM()
+    }
+    def tag = sh(returnStdout: true, script: "git tag --contains | head -1").trim()
+    if (tag) {
+        stage("Build tag") {
+            echo "Build tag started!"
+            echo "Tag name: ${tag}"
+        }
+    } else if (env.CHANGE_ID) {
+        buildPullRequest()
+    } else {
+        buildPushCommit()
+    }
 }
 
 def buildPullRequest() {
-    node() {
-        docker.image('opencpsv2/gradle:4.9.0-jdk8').inside('-v "gradle_cache_volume:/home/gradle/gradle_cache" ') {
+    docker.image('opencpsv2/gradle:4.9.0-jdk8').inside('-v "gradle_cache_volume:/home/gradle/gradle_cache" ') {
+        stage('Set ENV') {
+            env.GIT_PROJECT_NAME = determineRepoName()
+            env.SONA_QUBE_PROJECT_KEY = env.GIT_PROJECT_NAME + ":" + env.BRANCH_NAME
+            echo "${env.SONA_QUBE_PROJECT_KEY}"
+            echo sh(script: 'env|sort', returnStdout: true)
+        }
 
-            stage('Checkout') {
-                checkoutSCM()
-                env.GIT_PROJECT_NAME = determineRepoName()
-                env.SONA_QUBE_PROJECT_KEY = env.GIT_PROJECT_NAME + ":" + env.BRANCH_NAME
-                echo "${env.SONA_QUBE_PROJECT_KEY}"
-                echo sh(script: 'env|sort', returnStdout: true)
+        stage('Clean') {
+            sh 'cat  Jenkinsfile'
+            sh 'gradle -v'
+            sh 'gradle --no-daemon clean --profile'
+        }
+
+        stage('Build') {
+            sh 'gradle --no-daemon  buildService --profile'
+        }
+
+        stage('Test') {
+            try {
+                sh 'gradle --no-daemon  test --profile'
+            } catch (err) {
+                echo "${err}"
+                throw err
+            } finally {
+                junit 'modules/**/TEST-*.xml'
+                def testResultString = getTestStatuses()
+                echo "${testResultString}"
+                pullRequest.comment("${env.GIT_COMMIT_ID}: ${testResultString}. [Details Report...](${env.JOB_URL}${BUILD_NUMBER}/testReport/)")
             }
+        }
 
-            stage('Clean') {
-                sh 'cat  Jenkinsfile'
-                sh 'gradle -v'
-                sh 'gradle --no-daemon clean --profile'
+        stage('SonarQube analysis') {
+            sh 'gradle --no-daemon jacocoTestReport jacocoRootReport'
+            withSonarQubeEnv('Sonar OpenCPS') {
+                sh "gradle --no-daemon --info sonarqube -Dsonar.projectName=${env.SONA_QUBE_PROJECT_KEY} -Dsonar.projectKey=${env.SONA_QUBE_PROJECT_KEY}"
+
+                def props = readProperties file: 'build/sonar/report-task.txt'
+                env.SONAR_CE_TASK_ID = props['ceTaskId']
+                env.SONAR_PROJECT_KEY = props['projectKey']
+                env.SONAR_SERVER_URL = props['serverUrl']
+                env.SONAR_DASHBOARD_URL = props['dashboardUrl']
             }
+        }
 
-            stage('Build') {
-                sh 'gradle --no-daemon  buildService --profile'
-            }
-
-            stage('Test') {
-                try {
-                    sh 'gradle --no-daemon  test --profile'
-                } catch (err) {
-                    echo "${err}"
-                    throw err
-                } finally {
-                    junit 'modules/**/TEST-*.xml'
-                    def testResultString = getTestStatuses()
-                    echo "${testResultString}"
-                    pullRequest.comment("${env.GIT_COMMIT_ID}: ${testResultString}. [Details Report...](${env.JOB_URL}${BUILD_NUMBER}/testReport/)")
-                }
-            }
-
-            stage('SonarQube analysis') {
-                sh 'gradle --no-daemon jacocoTestReport jacocoRootReport'
-                withSonarQubeEnv('Sonar OpenCPS') {
-                    sh "gradle --no-daemon --info sonarqube -Dsonar.projectName=${env.SONA_QUBE_PROJECT_KEY} -Dsonar.projectKey=${env.SONA_QUBE_PROJECT_KEY}"
-
-                    def props = readProperties file: 'build/sonar/report-task.txt'
-                    env.SONAR_CE_TASK_ID = props['ceTaskId']
-                    env.SONAR_PROJECT_KEY = props['projectKey']
-                    env.SONAR_SERVER_URL = props['serverUrl']
-                    env.SONAR_DASHBOARD_URL = props['dashboardUrl']
-                }
-            }
-
-            stage("Quality Gate") {
-                timeout(time: 1, unit: 'HOURS') {
-                    // Just in case something goes wrong, pipeline will be killed after a timeout
-                    def qg = waitForQualityGate() // Reuse taskId previously collected by withSonarQubeEnv
-                    echo "{env.SONAR_SERVER_URL}"
-                    echo "{env.SONAR_PROJECT_KEY}"
-                    echo "{env.SONAR_DASHBOARD_URL}"
-                    def sonarQubeAnalysisResult = getSonarQubeAnalysisResult(SONAR_SERVER_URL, SONAR_PROJECT_KEY)
-                    echo "${sonarQubeAnalysisResult}"
-                    sonarQubeAnalysisResult += "\n SonaQube analysis result details: [SonarQube Dashboard](${SONAR_DASHBOARD_URL})"
-                    pullRequest.comment("${env.GIT_COMMIT_ID}: " + sonarQubeAnalysisResult)
-                    if (qg.status != 'OK') {
-                        error "Pipeline aborted due to quality gate failure: ${qg.status}"
-                    }
+        stage("Quality Gate") {
+            timeout(time: 1, unit: 'HOURS') {
+                // Just in case something goes wrong, pipeline will be killed after a timeout
+                def qg = waitForQualityGate() // Reuse taskId previously collected by withSonarQubeEnv
+                echo "{env.SONAR_SERVER_URL}"
+                echo "{env.SONAR_PROJECT_KEY}"
+                echo "{env.SONAR_DASHBOARD_URL}"
+                def sonarQubeAnalysisResult = getSonarQubeAnalysisResult(SONAR_SERVER_URL, SONAR_PROJECT_KEY)
+                echo "${sonarQubeAnalysisResult}"
+                sonarQubeAnalysisResult += "\n SonaQube analysis result details: [SonarQube Dashboard](${SONAR_DASHBOARD_URL})"
+                pullRequest.comment("${env.GIT_COMMIT_ID}: " + sonarQubeAnalysisResult)
+                if (qg.status != 'OK') {
+                    error "Pipeline aborted due to quality gate failure: ${qg.status}"
                 }
             }
         }
     }
 }
+
 
 @NonCPS
 def getTestStatuses() {
@@ -164,29 +173,22 @@ def getSonarQubeMeasureMetric(sonarQubeURL, projectKey, metricKeys) {
 
 
 def buildPushCommit() {
-    node() {
-        docker.image('opencpsv2/gradle:4.9.0-jdk8').inside('-v "gradle_cache_volume:/home/gradle/gradle_cache" ') {
-
-            notifyStarted()
-
-            stage('Checkout') {
-                checkoutSCM()
-            }
-            stage('Clean') {
-                sh 'gradle --no-daemon clean --profile'
-            }
-            stage('Build') {
-                sh 'gradle --no-daemon  buildService --profile'
-            }
-            stage('Test') {
-                try {
-                    sh 'gradle --no-daemon  test --profile'
-                } catch (err) {
-                    echo "${err}"
-                    throw err
-                } finally {
-                    junit 'modules/**/TEST-*.xml'
-                }
+    docker.image('opencpsv2/gradle:4.9.0-jdk8').inside('-v "gradle_cache_volume:/home/gradle/gradle_cache" ') {
+        notifyStarted()
+        stage('Clean') {
+            sh 'gradle --no-daemon clean --profile'
+        }
+        stage('Build') {
+            sh 'gradle --no-daemon  buildService --profile'
+        }
+        stage('Test') {
+            try {
+                sh 'gradle --no-daemon  test --profile'
+            } catch (err) {
+                echo "${err}"
+                throw err
+            } finally {
+                junit 'modules/**/TEST-*.xml'
             }
         }
     }
@@ -201,7 +203,7 @@ def checkoutSCM() {
 
 def notifyStarted() {
     // send to email
-    emailext (
+    emailext(
             subject: "STARTED: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]'",
             body: """<p>STARTED: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]':</p>
             <p>Check console output at "<a href="${env.BUILD_URL}">${env.JOB_NAME} [${env.BUILD_NUMBER}]</a>"</p>""",
