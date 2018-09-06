@@ -8,10 +8,12 @@ node() {
     }
     def tag = sh(returnStdout: true, script: "git tag --contains | head -1").trim()
     if (tag) {
+
         stage("Build tag") {
             echo "Build tag started!"
             echo "Tag name: ${tag}"
         }
+        
     } else if (env.CHANGE_ID) {
         buildPullRequest()
     } else {
