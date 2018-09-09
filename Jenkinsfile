@@ -5,13 +5,21 @@ node() {
     stage('Checkout') {
         checkoutSCM()
     }
+    def isReleaseBuild = false
+    try{
+        if (TAG_VERSION.length() > 0){
+            isReleaseBuild= true
+        }
+    }catch(err){
+        eho "Not release build."
+    }
     def tag = sh(returnStdout: true, script: "git tag --contains | head -1").trim()
     if (tag) {
         stage("Build tag") {
             echo "Build tag started!"
             echo "Tag name: ${tag}"
         }
-    } else if (TAG_VERSION.length() > 0) {
+    } else if (isReleaseBuild) {
         buildRelease()
     } else if (env.CHANGE_ID) {
         buildPullRequest()
@@ -241,7 +249,6 @@ def buildRelease() {
 
     stage('Verify'){
         echo "dev cd release test commit build by branch"
-        sh 'cat Jenkinsfile'
     }
 
 }
