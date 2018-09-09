@@ -235,7 +235,7 @@ def buildRelease() {
     }
 
     stage('Verify'){
-        echo "dev cd release test commit 1"
+        echo "dev cd release test commit 2 build by branch"
         sh 'cat Jenkinsfile'
     }
 
