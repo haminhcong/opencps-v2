@@ -11,7 +11,7 @@ node() {
             isReleaseBuild= true
         }
     }catch(err){
-        eho "Not release build."
+        echo "Not release build."
     }
     def tag = sh(returnStdout: true, script: "git tag --contains | head -1").trim()
     if (tag) {
