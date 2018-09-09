@@ -247,5 +247,36 @@ def buildRelease() {
     stage('Verify'){
         echo "dev cd release test commit build by branch"
     }
+    docker.image('opencpsv2/gradle:4.9.0-jdk8').inside('-v "gradle_cache_volume:/home/gradle/gradle_cache" ') {
+        stage('Set ENV') {
+            env.GIT_PROJECT_NAME = determineRepoName()
+            env.SONA_QUBE_PROJECT_KEY = env.GIT_PROJECT_NAME + ":" + env.BRANCH_NAME
+            echo "${env.SONA_QUBE_PROJECT_KEY}"
+            echo sh(script: 'env|sort', returnStdout: true)
+        }
 
+        stage('Clean') {
+            sh 'cat  Jenkinsfile'
+            sh 'gradle -v'
+            sh 'gradle --no-daemon clean --profile'
+        }
+
+        stage('Build') {
+            sh 'gradle --no-daemon  buildService --profile'
+        }
+
+        stage('Test') {
+            try {
+                sh 'gradle --no-daemon  test --profile'
+            } catch (err) {
+                echo "${err}"
+                throw err
+            } finally {
+                junit 'modules/**/TEST-*.xml'
+                def testResultString = getTestStatuses()
+                echo "${testResultString}"
+                pullRequest.comment("${env.GIT_COMMIT_ID}: ${testResultString}. [Details Report...](${env.JOB_URL}${BUILD_NUMBER}/testReport/)")
+            }
+        }
+    }
 }
