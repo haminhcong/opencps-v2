@@ -2,29 +2,31 @@ import groovy.json.JsonSlurperClassic
 import hudson.tasks.test.AbstractTestResultAction
 
 node() {
-    stage('Checkout') {
-        checkoutSCM()
-    }
     def isReleaseBuild = false
-    try{
-        if (TAG_VERSION.length() > 0){
-            isReleaseBuild= true
+    try {
+        if (TAG_VERSION.length() > 0) {
+            isReleaseBuild = true
         }
     } catch (err) {
         echo "Not release build."
     }
-    def tag = sh(returnStdout: true, script: "git tag --contains | head -1").trim()
-    if (tag) {
-        stage("Build tag") {
-            echo "Build tag started!"
-            echo "Tag name: ${tag}"
-        }
-    } else if (isReleaseBuild) {
+    if (isReleaseBuild) {
         buildRelease()
-    } else if (env.CHANGE_ID) {
-        buildPullRequest()
     } else {
-        buildPushCommit()
+        stage('Checkout') {
+            checkoutSCM()
+        }
+        def tag = sh(returnStdout: true, script: "git tag --contains | head -1").trim()
+        if (tag) {
+            stage("Build tag") {
+                echo "Build tag started!"
+                echo "Tag name: ${tag}"
+            }
+        } else if (env.CHANGE_ID) {
+            buildPullRequest()
+        } else {
+            buildPushCommit()
+        }
     }
 }
 
@@ -225,7 +227,7 @@ def buildRelease() {
     // check input conditions
     if (RELEASE_TITLE.length() == 0 ||
             RELEASE_COMMIT_ID.length() == 0 ||
-            TAG_VERSION == 'NOT_SET'){
+            TAG_VERSION == 'NOT_SET') {
         error "Input parameter is not valid. Check them again. Release Failed."
     }
 
@@ -234,7 +236,7 @@ def buildRelease() {
     echo "Release title: ${RELEASE_TITLE}"
     echo "Release note: ${RELEASE_NOTE}"
 
-    stage('Checkout'){
+    stage('Checkout') {
         checkout changelog: true, poll: true, scm: [
                 $class           : 'GitSCM',
                 branches         : [[name: RELEASE_COMMIT_ID]],
@@ -244,7 +246,7 @@ def buildRelease() {
         ]
     }
 
-    stage('Verify'){
+    stage('Verify') {
         echo "dev cd release test commit build by branch"
     }
     docker.image('opencpsv2/gradle:4.9.0-jdk8').inside('-v "gradle_cache_volume:/home/gradle/gradle_cache" ') {
@@ -277,6 +279,11 @@ def buildRelease() {
                 echo "${testResultString}"
                 pullRequest.comment("${env.GIT_COMMIT_ID}: ${testResultString}. [Details Report...](${env.JOB_URL}${BUILD_NUMBER}/testReport/)")
             }
+        }
+        // sonar qube scan (not implemented)
+
+        stage('Package & Upload images') {
+
         }
     }
 }
