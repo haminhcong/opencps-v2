@@ -1,7 +1,6 @@
 import groovy.json.JsonSlurperClassic
 import hudson.tasks.test.AbstractTestResultAction
 
-
 node() {
     stage('Checkout') {
         checkoutSCM()
@@ -12,6 +11,8 @@ node() {
             echo "Build tag started!"
             echo "Tag name: ${tag}"
         }
+    } else if (TAG_VERSION.length() > 0) {
+        buildRelease()
     } else if (env.CHANGE_ID) {
         buildPullRequest()
     } else {
@@ -210,4 +211,32 @@ def notifyStarted() {
             // Update this list by change env variable at Manage Jenkins > Configure System > Global properties
             to: "${env.OPENCPS_MAIL_LIST}"
     )
+}
+// RELEASE_COMMIT_ID RELEASE_BRANCH RELEASE_TITLE RELEASE_NOTE
+def buildRelease() {
+    // check input conditions
+    if (RELEASE_TITLE.length() == 0 ||
+            (RELEASE_COMMIT_ID.length() == 0 && RELEASE_BRANCH.length() == 0) ||
+            TAG_VERSION == 'NOT_SET'){
+        error "Input parameter is not valid. Check them again. Release Failed."
+    }
+    def CHECKOUT_COMMIT = RELEASE_COMMIT_ID
+    if(CHECKOUT_COMMIT.length()==0){
+        CHECKOUT_COMMIT = RELEASE_BRANCH
+    }
+    stage('Checkout'){
+        checkout changelog: true, poll: true, scm: [
+                $class           : 'GitSCM',
+                branches         : [[name: CHECKOUT_COMMIT]],
+                extensions       : [[$class : 'CloneOption',
+                                     shallow: false, timeout: 75]],
+                userRemoteConfigs: [[url: 'https://github.com/haminhcong/opencps-v2.git']]
+        ]
+    }
+
+    stage('Verify'){
+        echo "dev cd release test commit 1"
+        sh 'cat Jenkinsfile'
+    }
+
 }
