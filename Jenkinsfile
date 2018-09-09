@@ -224,6 +224,11 @@ def buildRelease() {
     if(CHECKOUT_COMMIT.length()==0){
         CHECKOUT_COMMIT = RELEASE_BRANCH
     }
+    echo "Release version: ${TAG_VERSION}"
+    echo "Release commit id: ${CHECKOUT_COMMIT}"
+    echo "Release title: ${RELEASE_TITLE}"
+    echo "Release note: ${RELEASE_NOTE}"
+
     stage('Checkout'){
         checkout changelog: true, poll: true, scm: [
                 $class           : 'GitSCM',
@@ -235,7 +240,7 @@ def buildRelease() {
     }
 
     stage('Verify'){
-        echo "dev cd release test commit 2 build by branch"
+        echo "dev cd release test commit build by branch"
         sh 'cat Jenkinsfile'
     }
 
