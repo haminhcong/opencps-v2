@@ -10,7 +10,7 @@ node() {
         if (TAG_VERSION.length() > 0){
             isReleaseBuild= true
         }
-    }catch(err){
+    } catch (err) {
         echo "Not release build."
     }
     def tag = sh(returnStdout: true, script: "git tag --contains | head -1").trim()
@@ -224,23 +224,20 @@ def notifyStarted() {
 def buildRelease() {
     // check input conditions
     if (RELEASE_TITLE.length() == 0 ||
-            (RELEASE_COMMIT_ID.length() == 0 && RELEASE_BRANCH.length() == 0) ||
+            RELEASE_COMMIT_ID.length() == 0 ||
             TAG_VERSION == 'NOT_SET'){
         error "Input parameter is not valid. Check them again. Release Failed."
     }
-    def CHECKOUT_COMMIT = RELEASE_COMMIT_ID
-    if(CHECKOUT_COMMIT.length()==0){
-        CHECKOUT_COMMIT = RELEASE_BRANCH
-    }
+
     echo "Release version: ${TAG_VERSION}"
-    echo "Release commit id: ${CHECKOUT_COMMIT}"
+    echo "Release commit id: ${RELEASE_COMMIT_ID}"
     echo "Release title: ${RELEASE_TITLE}"
     echo "Release note: ${RELEASE_NOTE}"
 
     stage('Checkout'){
         checkout changelog: true, poll: true, scm: [
                 $class           : 'GitSCM',
-                branches         : [[name: CHECKOUT_COMMIT]],
+                branches         : [[name: RELEASE_COMMIT_ID]],
                 extensions       : [[$class : 'CloneOption',
                                      shallow: false, timeout: 75]],
                 userRemoteConfigs: [[url: 'https://github.com/haminhcong/opencps-v2.git']]
