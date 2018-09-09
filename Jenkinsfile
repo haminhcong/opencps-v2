@@ -277,7 +277,6 @@ def buildRelease() {
                 junit 'modules/**/TEST-*.xml'
                 def testResultString = getTestStatuses()
                 echo "${testResultString}"
-                pullRequest.comment("${env.GIT_COMMIT_ID}: ${testResultString}. [Details Report...](${env.JOB_URL}${BUILD_NUMBER}/testReport/)")
             }
         }
         // sonar qube scan (not implemented)
