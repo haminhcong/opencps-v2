@@ -281,8 +281,19 @@ def buildRelease() {
         }
         // sonar qube scan (not implemented)
 
-        stage('Package & Upload images') {
+        stage('Package & Upload Artifacts') {
+            sh 'gradle --no-daemon  buildService deploy--profile'
+            dir('bundles/osgi') {
+                sh 'tar -zcvf artifact.tar.gz modules'
+                nexusPublisher nexusInstanceId: 'nexusRepo',    \
+                           nexusRepositoryId: 'stagging',    \
+                           packages: [
+                        [$class         : 'MavenPackage',
+                         mavenAssetList : [[classifier: '', extension: '', filePath: 'artifact.tar.gz']],
+                         mavenCoordinate: [groupId: 'opencps', artifactId: 'opencpsv2',  packaging: 'tar.gz',version: "${TAG_VERSION}"]
+                        ]]
 
+            }
         }
     }
 }
