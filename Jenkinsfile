@@ -282,7 +282,7 @@ def buildRelease() {
         // sonar qube scan (not implemented)
 
         stage('Package & Upload Artifacts') {
-            sh 'gradle --no-daemon  buildService deploy--profile'
+            sh 'gradle --no-daemon  buildService deploy --profile'
             dir('bundles/osgi') {
                 sh 'tar -zcvf artifact.tar.gz modules'
                 nexusPublisher nexusInstanceId: 'nexusRepo',    \
