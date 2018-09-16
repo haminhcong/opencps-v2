@@ -257,42 +257,40 @@ def buildRelease() {
             echo sh(script: 'env|sort', returnStdout: true)
         }
 
-        stage('Clean') {
-            sh 'cat  Jenkinsfile'
-            sh 'gradle -v'
-            sh 'gradle --no-daemon clean --profile'
-        }
-
-        stage('Build') {
-            sh 'gradle --no-daemon  buildService --profile'
-        }
-
-        stage('Test') {
-            try {
-                sh 'gradle --no-daemon  test --profile'
-            } catch (err) {
-                echo "${err}"
-                throw err
-            } finally {
-                junit 'modules/**/TEST-*.xml'
-                def testResultString = getTestStatuses()
-                echo "${testResultString}"
-            }
-        }
+//        stage('Clean') {
+//            sh 'cat  Jenkinsfile'
+//            sh 'gradle -v'
+//            sh 'gradle --no-daemon clean --profile'
+//        }
+//
+//        stage('Build') {
+//            sh 'gradle --no-daemon  buildService --profile'
+//        }
+//
+//        stage('Test') {
+//            try {
+//                sh 'gradle --no-daemon  test --profile'
+//            } catch (err) {
+//                echo "${err}"
+//                throw err
+//            } finally {
+//                junit 'modules/**/TEST-*.xml'
+//                def testResultString = getTestStatuses()
+//                echo "${testResultString}"
+//            }
+//        }
         // sonar qube scan (not implemented)
 
         stage('Package & Upload Artifacts') {
             sh 'gradle --no-daemon  buildService deploy --profile'
             dir('bundles/osgi') {
                 sh 'tar -zcvf artifact.tar.gz modules'
-                nexusPublisher nexusInstanceId: 'nexusRepo',    \
-                           nexusRepositoryId: 'stagging',    \
-                           packages: [
+                sh 'ls -al'
+                nexusPublisher nexusInstanceId: 'nexusRepo', nexusRepositoryId: 'stagging', packages: [
                         [$class         : 'MavenPackage',
-                         mavenAssetList : [[classifier: '', extension: '', filePath: 'artifact.tar.gz']],
-                         mavenCoordinate: [groupId: 'opencps', artifactId: 'opencpsv2',  packaging: 'tar.gz',version: "${TAG_VERSION}"]
+                         mavenAssetList : [[classifier: '', extension: 'tar.gz', filePath: 'artifact.tar.gz']],
+                         mavenCoordinate: [groupId: 'opencps', artifactId: 'opencpsv2', packaging: 'tar.gz', version: "${TAG_VERSION}"]
                         ]]
-
             }
         }
     }
