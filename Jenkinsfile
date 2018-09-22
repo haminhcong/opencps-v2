@@ -299,7 +299,7 @@ def buildRelease() {
         configFileProvider([configFile(fileId: "opencpsv2-config", targetLocation: '.')]) {
             load "opencpsv2-stagging-config"
         }
-        docker.image('opencpsv2/gradle:4.9.0-jdk8').inside() {
+        docker.image('opencpsv2/ansible:centos7').inside() {
             // generate host inventory file
             dir('ci-cd/ansible') {
                 def jenkins_current_dir = pwd()
