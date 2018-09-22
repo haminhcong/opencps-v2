@@ -1,0 +1,2 @@
+docker build .  -f Dockerfile -t opencpsv2/ansible:centos7
+

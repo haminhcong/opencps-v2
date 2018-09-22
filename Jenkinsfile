@@ -185,7 +185,7 @@ def getSonarQubeMeasureMetric(sonarQubeURL, projectKey, metricKeys) {
 
 def buildPushCommit() {
     docker.image('opencpsv2/gradle:4.9.0-jdk8').inside('-v "gradle_cache_volume:/home/gradle/gradle_cache" ') {
-        notifyStarted()
+//        notifyStarted()
         stage('Clean') {
             sh 'gradle --no-daemon clean --profile'
         }
@@ -281,16 +281,43 @@ def buildRelease() {
 //        }
         // sonar qube scan (not implemented)
 
-        stage('Package & Upload Artifacts') {
-            sh 'gradle --no-daemon  buildService deploy --profile'
-            dir('bundles/osgi') {
-                sh 'tar -zcvf artifact.tar.gz modules'
-                sh 'ls -al'
-                nexusPublisher nexusInstanceId: 'nexusRepo', nexusRepositoryId: 'stagging', packages: [
-                        [$class         : 'MavenPackage',
-                         mavenAssetList : [[classifier: '', extension: 'tar.gz', filePath: 'artifact.tar.gz']],
-                         mavenCoordinate: [groupId: 'opencps', artifactId: 'opencpsv2', packaging: 'tar.gz', version: "${TAG_VERSION}"]
-                        ]]
+//        stage('Package & Upload Artifacts') {
+//            sh 'gradle --no-daemon  buildService deploy --profile'
+//            dir('bundles/osgi') {
+//                sh 'tar -zcvf artifact.tar.gz modules'
+//                sh 'ls -al'
+//                nexusPublisher nexusInstanceId: 'nexusRepo', nexusRepositoryId: 'stagging', packages: [
+//                        [$class         : 'MavenPackage',
+//                         mavenAssetList : [[classifier: '', extension: 'tar.gz', filePath: 'artifact.tar.gz']],
+//                         mavenCoordinate: [groupId: 'opencps', artifactId: 'opencpsv2', packaging: 'tar.gz', version: "${TAG_VERSION}"]
+//                        ]]
+//            }
+//        }
+    }
+
+    stage("Deploy app to stagging env") {
+        configFileProvider([configFile(fileId: "opencpsv2-config", targetLocation: '.')]) {
+            load "opencpsv2-stagging-config"
+        }
+        docker.image('opencpsv2/gradle:4.9.0-jdk8').inside() {
+            // generate host inventory file
+            dir('ci-cd/ansible') {
+                def jenkins_current_dir = pwd()
+                sh """
+                 ansible -i localhost.ini site.yml --tags "generate-stagging-inventory" \
+                    --extra-vars "stagging_ip=${env.STAGGING_IP}" \
+                    --extra-vars "working_dir=${env.STAGGING_WORKING_DIR}" \
+                    --extra-vars "jenkins_current_dir=${jenkins_current_dir}"
+                """
+                sh 'cat stagging_inventory.ini'
+                withCredentials([usernamePassword(credentialsId: 'stagging_authentication_credential',
+                        usernameVariable: 'stagging_username', passwordVariable: 'stagging_password')]) {
+                    sh """
+                     ansible -i stagging_inventory.ini site.yml --tags "deploy-stagging" \
+                        -e "ansible_user=${stagging_username}" \
+                        -e "ansible_ssh_pass=${stagging_password}"
+                    """
+                }
             }
         }
     }

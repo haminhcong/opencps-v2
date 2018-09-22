@@ -1,0 +1,5 @@
+- name: Check env
+  shell: >
+    echo {{ansible_host}}
+  args:
+    chdir: "{{working_dir}}"

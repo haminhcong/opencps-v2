@@ -1,0 +1,25 @@
+
+version: '2.3'
+services:
+  jenkins:
+    # image: jenkinsci/blueocean:1.8.2
+    build:
+      context: jenkins/
+    privileged: true
+    user: root
+    ports:
+      - 8085:8080
+      - 50001:50000
+    container_name: jenkins
+    volumes:
+      - /var/jenkins_home:/var/jenkins_home
+      - /var/run/docker.sock:/var/run/docker.sock
+  nexus:
+    container_name: nexus
+    image: sonatype/nexus3:3.13.0
+    volumes:
+      - nexus-data:/nexus-data
+    ports:
+      - 8081:8081
+volumes:
+  nexus-data: {}

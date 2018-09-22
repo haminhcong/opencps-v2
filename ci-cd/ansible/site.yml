@@ -1,0 +1,16 @@
+---
+- name: Generate stagging inventory file
+  gather_facts: false
+  hosts:
+  - local
+  roles:
+  - { role: generate-stagging-inventory,
+      tags: generate-stagging-inventory }
+
+- name: Deploy application to stagging environment
+  gather_facts: false
+  hosts:
+  - stagging_hosts
+  roles:
+  - { role: deploy-stagging,
+      tags: deploy-stagging }

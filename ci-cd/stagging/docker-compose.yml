@@ -1,0 +1,26 @@
+version: '2.3'
+services:
+  opencpsv2-portal:
+    build:
+      context: ./opencpsv2-portal
+    volumes:
+    - ./opencpsv2-portal:/etc/liferay/mount
+    ports:
+    - "9080:8080"
+    links:
+      - "mariadb:database"
+  mariadb:
+    build:
+      context: ./mariadb
+      args:
+        MYSQL_ROOT_PASSWORD_INIT: opencpsv2
+        MYSQL_DATABASE_INIT: opencpsv2
+        MYSQL_USER_INIT: opencpsv2
+        MYSQL_PASSWORD_INIT: opencpsv2
+    environment:
+      MYSQL_ROOT_PASSWORD: opencpsv2
+      MYSQL_DATABASE: opencpsv2
+      MYSQL_USER: opencpsv2
+      MYSQL_PASSWORD: opencpsv2
+    ports:
+      - "3306:3306"

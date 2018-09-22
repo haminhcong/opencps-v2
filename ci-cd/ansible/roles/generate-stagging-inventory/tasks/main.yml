@@ -1,0 +1,4 @@
+- name: Generate inventory file
+  template:
+    src: stagging_inventory.ini.j2
+    dest: "{{ jenkins_current_dir }}/stagging_inventory.ini"
