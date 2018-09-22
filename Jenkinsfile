@@ -296,7 +296,7 @@ def buildRelease() {
     }
 
     stage("Deploy app to stagging env") {
-        configFileProvider([configFile(fileId: "opencpsv2-config", targetLocation: '.')]) {
+        configFileProvider([configFile(fileId: "opencpsv2-stagging-config", targetLocation: '.')]) {
             load "opencpsv2-stagging-config"
         }
         docker.image('opencpsv2/ansible:centos7').inside() {
