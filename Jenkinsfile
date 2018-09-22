@@ -304,7 +304,7 @@ def buildRelease() {
             dir('ci-cd/ansible') {
                 def jenkins_current_dir = pwd()
                 sh """
-                 ansible -i localhost.ini site.yml --tags "generate-stagging-inventory" \
+                 ansible-playbook -i localhost.ini site.yml --tags "generate-stagging-inventory" \
                     --extra-vars "stagging_ip=${env.STAGGING_IP}" \
                     --extra-vars "working_dir=${env.STAGGING_WORKING_DIR}" \
                     --extra-vars "jenkins_current_dir=${jenkins_current_dir}"
@@ -313,7 +313,7 @@ def buildRelease() {
                 withCredentials([usernamePassword(credentialsId: 'stagging_authentication_credential',
                         usernameVariable: 'stagging_username', passwordVariable: 'stagging_password')]) {
                     sh """
-                     ansible -i stagging_inventory.ini site.yml --tags "deploy-stagging" \
+                     ansible-playbook -i stagging_inventory.ini site.yml --tags "deploy-stagging" \
                         -e "ansible_user=${stagging_username}" \
                         -e "ansible_ssh_pass=${stagging_password}"
                     """
