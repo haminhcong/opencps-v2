@@ -301,7 +301,7 @@ def buildRelease() {
             }
 
             withDockerRegistry([credentialsId: 'nexusRepoCredential',
-                                url          : "${env.DOCKER_REPO_URL}"]) {
+                                url          : "http://${env.DOCKER_REPO_URL}"]) {
                 sh 'mkdir -p ci-cd/opencpsv2-docker-image/deploy'
                 sh 'cp -ar bundles/osgi/modules/* ci-cd/opencpsv2-docker-image/deploy/'
                 dir('ci-cd/opencpsv2-docker-image') {
