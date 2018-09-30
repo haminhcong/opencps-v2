@@ -1,32 +1,30 @@
 import groovy.json.JsonSlurperClassic
 import hudson.tasks.test.AbstractTestResultAction
 
-node() {
-    def isReleaseBuild = false
-    try {
-        if (TAG_VERSION.length() > 0) {
-            isReleaseBuild = true
-        }
-    } catch (err) {
-        echo "Not release build."
+def isReleaseBuild = false
+try {
+    if (TAG_VERSION.length() > 0) {
+        isReleaseBuild = true
     }
-    if (isReleaseBuild) {
-        buildRelease()
+} catch (err) {
+    echo "Not release build."
+}
+if (isReleaseBuild) {
+    buildRelease()
+} else {
+    stage('Checkout') {
+        checkoutSCM()
+    }
+    def tag = sh(returnStdout: true, script: "git tag --contains | head -1").trim()
+    if (tag) {
+        stage("Build tag") {
+            echo "Build tag started!"
+            echo "Tag name: ${tag}"
+        }
+    } else if (env.CHANGE_ID) {
+        buildPullRequest()
     } else {
-        stage('Checkout') {
-            checkoutSCM()
-        }
-        def tag = sh(returnStdout: true, script: "git tag --contains | head -1").trim()
-        if (tag) {
-            stage("Build tag") {
-                echo "Build tag started!"
-                echo "Tag name: ${tag}"
-            }
-        } else if (env.CHANGE_ID) {
-            buildPullRequest()
-        } else {
-            buildPushCommit()
-        }
+        buildPushCommit()
     }
 }
 
@@ -244,19 +242,21 @@ def buildRelease() {
     echo "Release note: ${RELEASE_NOTE}"
 
     stage('Checkout') {
-        checkout changelog: true, poll: true, scm: [
-                $class           : 'GitSCM',
-                branches         : [[name: RELEASE_COMMIT_ID]],
-                extensions       : [[$class : 'CloneOption',
-                                     shallow: false, timeout: 75]],
-                userRemoteConfigs: [[url: 'https://github.com/haminhcong/opencps-v2.git']]
-        ]
+        node() {
+            checkout changelog: true, poll: true, scm: [
+                    $class           : 'GitSCM',
+                    branches         : [[name: RELEASE_COMMIT_ID]],
+                    extensions       : [[$class : 'CloneOption',
+                                         shallow: false, timeout: 75]],
+                    userRemoteConfigs: [[url: 'https://github.com/haminhcong/opencps-v2.git']]
+            ]
+        }
     }
 
     stage('Verify') {
         echo "dev cd release test commit build by branch"
     }
-    docker.image('opencpsv2/gradle:4.9.0-jdk8').inside('-v "gradle_cache_volume:/home/gradle/gradle_cache" ') {
+    node() {
         stage('Set ENV') {
             env.GIT_PROJECT_NAME = determineRepoName()
             env.SONA_QUBE_PROJECT_KEY = env.GIT_PROJECT_NAME + ":" + env.BRANCH_NAME
@@ -288,63 +288,66 @@ def buildRelease() {
 //        }
         // sonar qube scan (not implemented)
     }
-
-    stage('Package & Upload Artifacts') {
-        docker.image('opencpsv2/gradle:4.9.0-jdk8').inside('-v "gradle_cache_volume:/home/gradle/gradle_cache" ') {
-            sh 'gradle --no-daemon  buildService deploy --profile'
-            dir('bundles/osgi') {
-                sh 'tar -zcvf artifact.tar.gz modules'
-                sh 'ls -al'
-                nexusPublisher nexusInstanceId: 'nexusRepo', nexusRepositoryId: 'stagging', packages: [
-                        [$class         : 'MavenPackage',
-                         mavenAssetList : [[classifier: '', extension: 'tar.gz', filePath: 'artifact.tar.gz']],
-                         mavenCoordinate: [groupId: 'opencps', artifactId: 'opencpsv2', packaging: 'tar.gz', version: "${TAG_VERSION}"]
-                        ]]
-            }
-        }
-        withDockerRegistry([credentialsId: 'nexusRepoCredential',
-                            url          : "http://${env.DOCKER_REPO_URL}"]) {
-            sh 'mkdir -p ci-cd/opencpsv2-docker-image/deploy'
-            sh 'ls -al bundles/osgi/modules/'
-            sh 'cp -ar bundles/osgi/modules/* ci-cd/opencpsv2-docker-image/deploy/'
-            dir('ci-cd/opencpsv2-docker-image') {
-                def opencpsv2Image = docker.build(
-                        "${env.DOCKER_REPO_URL}/${env.STAGGING_REPO_NAME}/opencpsv2:${TAG_VERSION}")
-                try{
-                    opencpsv2Image.push()
-                }
-                finally {
-                    sh "docker rmi ${opencpsv2Image.id}"
+    node {
+        stage('Package & Upload Artifacts') {
+            docker.image('opencpsv2/gradle:4.9.0-jdk8').inside('-v "gradle_cache_volume:/home/gradle/gradle_cache" ') {
+                sh 'gradle --no-daemon  buildService deploy --profile'
+                dir('bundles/osgi') {
+                    sh 'tar -zcvf artifact.tar.gz modules'
+                    sh 'ls -al'
+                    nexusPublisher nexusInstanceId: 'nexusRepo', nexusRepositoryId: 'stagging', packages: [
+                            [$class         : 'MavenPackage',
+                             mavenAssetList : [[classifier: '', extension: 'tar.gz', filePath: 'artifact.tar.gz']],
+                             mavenCoordinate: [groupId: 'opencps', artifactId: 'opencpsv2', packaging: 'tar.gz', version: "${TAG_VERSION}"]
+                            ]]
                 }
             }
+            withDockerRegistry([credentialsId: 'nexusRepoCredential',
+                                url          : "http://${env.DOCKER_REPO_URL}"]) {
+                sh 'mkdir -p ci-cd/opencpsv2-docker-image/deploy'
+                sh 'ls -al bundles/osgi/modules/'
+                sh 'cp -ar bundles/osgi/modules/* ci-cd/opencpsv2-docker-image/deploy/'
+                dir('ci-cd/opencpsv2-docker-image') {
+                    def opencpsv2Image = docker.build(
+                            "${env.DOCKER_REPO_URL}/${env.STAGGING_REPO_NAME}/opencpsv2:${TAG_VERSION}")
+                    try {
+                        opencpsv2Image.push()
+                    }
+                    finally {
+                        sh "docker rmi ${opencpsv2Image.id}"
+                    }
+                }
+            }
         }
-    }
 
-    stage("Deploy app to stagging env") {
-        docker.image('opencpsv2/ansible:centos7').inside() {
-            // generate host inventory file
-            dir('ci-cd/ansible') {
-                def jenkins_current_dir = pwd()
-                sh """
+        stage("Deploy app to stagging env") {
+            docker.image('opencpsv2/ansible:centos7').inside() {
+                // generate host inventory file
+                dir('ci-cd/ansible') {
+                    def jenkins_current_dir = pwd()
+                    sh """
                  ansible-playbook -i localhost.ini site.yml --tags "generate-stagging-inventory" \
                     --extra-vars "stagging_ip=${env.STAGGING_IP}" \
                     --extra-vars "working_dir=${env.STAGGING_WORKING_DIR}" \
                     --extra-vars "jenkins_current_dir=${jenkins_current_dir}"
                 """
-                sh 'cat stagging_inventory.ini'
-                withCredentials([
-                        usernamePassword(credentialsId: 'stagging_authentication_credential',
-                                usernameVariable: 'stagging_username',
-                                passwordVariable: 'stagging_password'),
-                        usernamePassword(credentialsId: 'stagging_db_credentials',
-                                usernameVariable: 'stagging_db_name',
-                                passwordVariable: 'stagging_db_password'),
-                ]) {
-                    sh """
+                    sh 'cat stagging_inventory.ini'
+                    withCredentials([
+                            usernamePassword(credentialsId: 'nexusRepoCredential',
+                                    usernameVariable: 'nexus_repo_username',
+                                    passwordVariable: 'nexus_repo_password'),
+                            usernamePassword(credentialsId: 'stagging_authentication_credential',
+                                    usernameVariable: 'stagging_username',
+                                    passwordVariable: 'stagging_password'),
+                            usernamePassword(credentialsId: 'stagging_db_credentials',
+                                    usernameVariable: 'stagging_db_name',
+                                    passwordVariable: 'stagging_db_password'),
+                    ]) {
+                        sh """
                      ansible-playbook -i stagging_inventory.ini site.yml --tags "deploy-stagging" \
                         -e "ansible_user=${stagging_username}" \
                         -e "ansible_ssh_pass=${stagging_password}" \
-                        -e "DOKER_REPO_URL=${env.DOCKER_REPO_URL}" \
+                        -e "DOCKER_REPO_URL=${env.DOCKER_REPO_URL}" \
                         -e "REPO_NAME=${env.STAGGING_REPO_NAME}" \
                         -e "APP_NAME=opencpsv2" \
                         -e "APP_VERSION=${TAG_VERSION}" \
@@ -352,10 +355,40 @@ def buildRelease() {
                         -e "DB_PORT=${env.STAGGING_DB_PORT}" \
                         -e "DB_NAME=${env.STAGGING_DB_NAME}" \
                         -e "DB_USERNAME=${stagging_db_name}" \
-                        -e "DB_PASSWORD=${stagging_db_password}"
+                        -e "DB_PASSWORD=${stagging_db_password}" \
+                        -e "DOCKER_REPO_USERNAME=${nexus_repo_username}" \
+                        -e "DOCKER_REPO_PASSWORD=${nexus_repo_password}" 
                     """
+                    }
                 }
             }
         }
+    }
+    stage("Notify member that app was deployed to stagging env") {
+
+    }
+
+    stage("Wait user Accept Or Reject release & deploy production") {
+        try {
+            timeout(time: 5, unit: 'HOURS') {
+                env.ACCEPT_RELEASE = input message: 'Accept or Reject Release', ok: 'Proceed',
+                        parameters: [choice(name: 'ACCEPT_RELEASE', choices: 'yes\no',
+                                description: 'Do you want to release and deploy this build?')]
+
+            }
+        } catch (err) {
+            def user = err.getCauses()[0].getUser()
+            if ('SYSTEM' == user.toString()) {
+                env.ACCEPT_RELEASE = "no"
+            } else {
+                error "Aborted by: [${user}]"
+            }
+        }
+    }
+
+    if(env.ACCEPT_RELEASE =="yes"){
+        echo "Accept Release. Start Release Process."
+    }else{
+        echo "Reject Release. Exit build"
     }
 }

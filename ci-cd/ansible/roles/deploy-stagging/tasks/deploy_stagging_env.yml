@@ -4,8 +4,14 @@
     src: docker-compose.yml.j2
     dest: "{{ working_dir }}/docker-compose.yml"
 
+- name: Log into private registry and force re-authorization
+  docker_login:
+    registry: "http://{{DOCKER_REPO_URL}}"
+    username: {{DOCKER_REPO_USERNAME}}
+    password: {{DOCKER_REPO_PASSWORD}}
+
 - name: Pull stagging image
-  shell: "docker pull {{DOKER_REPO_URL}}/{{REPO_NAME}}/{{APP_NAME}}:{{APP_VERSION}}"
+  shell: "docker pull {{DOCKER_REPO_URL}}/{{REPO_NAME}}/{{APP_NAME}}:{{APP_VERSION}}"
 
 - name: Start database container
   shell: "docker-compose up -d mariadb"
