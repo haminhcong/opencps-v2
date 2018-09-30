@@ -349,7 +349,7 @@ def buildRelease() {
                         -e "APP_NAME=opencpsv2" \
                         -e "APP_VERSION=${TAG_VERSION}" \
                         -e "OPENCPSV2_PORT=${env.STAGGING_OPENCPSV2_PORT}" \
-                        -e "OPENCPSV2_PORT=${env.STAGGING_DB_PORT}" \
+                        -e "DB_PORT=${env.STAGGING_DB_PORT}" \
                         -e "DB_NAME=${env.STAGGING_DB_NAME}" \
                         -e "DB_USERNAME=${stagging_db_name}" \
                         -e "DB_PASSWORD=${stagging_db_password}"
