@@ -310,12 +310,15 @@ def buildRelease() {
             dir('ci-cd/opencpsv2-docker-image') {
                 def opencpsv2Image = docker.build(
                         "${env.DOCKER_REPO_URL}/${env.STAGGING_REPO_NAME}/opencpsv2:${TAG_VERSION}")
-                opencpsv2Image.push()
+                try{
+                    opencpsv2Image.push()
+                }
+                finally {
+                    sh "docker rmi ${opencpsv2Image.id}"
+                }
             }
         }
     }
-
-
 
     stage("Deploy app to stagging env") {
         docker.image('opencpsv2/ansible:centos7').inside() {

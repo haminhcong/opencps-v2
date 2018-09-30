@@ -1,8 +1,8 @@
 ---
-- name: Check env
-  shell: "echo {{ansible_host}}"
-  args:
-    chdir: "{{working_dir}}"
+- name: Ensure working dir exists
+  file:
+    state: directory
+    path: "{{working_dir}}"
 
 - name: Check if docker-compose exists
   stat:
