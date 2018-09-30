@@ -5,7 +5,7 @@
     dest: "{{ working_dir }}/docker-compose.yml"
 
 - name: Pull stagging image
-  shell: "docker pull {{docker_repo_uri}}/{{stagging_repo}}/{{app_name}}.{{app_version}}"
+  shell: "docker pull {{DOKER_REPO_URL}}/{{REPO_NAME}}/{{APP_NAME}}:{{APP_VERSION}}"
 
 - name: Start database container
   shell: "docker-compose up -d mariadb"
@@ -18,7 +18,7 @@
     port: "{{ DB_PORT }}"
     delay: 10
     timeout: 300
-    
+
 - name: Start app container
   shell: "docker-compose up -d opencpsv2-portal"
   args:
