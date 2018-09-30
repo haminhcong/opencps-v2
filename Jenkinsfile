@@ -222,27 +222,27 @@ def notifyStarted() {
 }
 // RELEASE_COMMIT_ID RELEASE_BRANCH RELEASE_TITLE RELEASE_NOTE
 def buildRelease() {
-    // check input conditions
-    configFileProvider([configFile(fileId: "opencpsv2-release-settings", targetLocation: '.'),
-                        configFile(fileId: "opencpsv2-stagging-config", targetLocation: '.')]) {
-        load "opencpsv2-release-settings"
-        load "opencpsv2-stagging-config"
+    node() {
+        // check input conditions
+        configFileProvider([configFile(fileId: "opencpsv2-release-settings", targetLocation: '.'),
+                            configFile(fileId: "opencpsv2-stagging-config", targetLocation: '.')]) {
+            load "opencpsv2-release-settings"
+            load "opencpsv2-stagging-config"
 
-    }
+        }
 
-    if (RELEASE_TITLE.length() == 0 ||
-            RELEASE_COMMIT_ID.length() == 0 ||
-            TAG_VERSION == 'NOT_SET') {
-        error "Input parameter is not valid. Check them again. Release Failed."
-    }
+        if (RELEASE_TITLE.length() == 0 ||
+                RELEASE_COMMIT_ID.length() == 0 ||
+                TAG_VERSION == 'NOT_SET') {
+            error "Input parameter is not valid. Check them again. Release Failed."
+        }
 
-    echo "Release version: ${TAG_VERSION}"
-    echo "Release commit id: ${RELEASE_COMMIT_ID}"
-    echo "Release title: ${RELEASE_TITLE}"
-    echo "Release note: ${RELEASE_NOTE}"
+        echo "Release version: ${TAG_VERSION}"
+        echo "Release commit id: ${RELEASE_COMMIT_ID}"
+        echo "Release title: ${RELEASE_TITLE}"
+        echo "Release note: ${RELEASE_NOTE}"
 
-    stage('Checkout') {
-        node() {
+        stage('Checkout') {
             checkout changelog: true, poll: true, scm: [
                     $class           : 'GitSCM',
                     branches         : [[name: RELEASE_COMMIT_ID]],
