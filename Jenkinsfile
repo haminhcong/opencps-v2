@@ -287,8 +287,10 @@ def buildRelease() {
 //            }
 //        }
         // sonar qube scan (not implemented)
+    }
 
-        stage('Package & Upload Artifacts') {
+    stage('Package & Upload Artifacts') {
+        docker.image('opencpsv2/gradle:4.9.0-jdk8').inside('-v "gradle_cache_volume:/home/gradle/gradle_cache" ') {
             sh 'gradle --no-daemon  buildService deploy --profile'
             dir('bundles/osgi') {
                 sh 'tar -zcvf artifact.tar.gz modules'
@@ -299,19 +301,21 @@ def buildRelease() {
                          mavenCoordinate: [groupId: 'opencps', artifactId: 'opencpsv2', packaging: 'tar.gz', version: "${TAG_VERSION}"]
                         ]]
             }
-
-            withDockerRegistry([credentialsId: 'nexusRepoCredential',
-                                url          : "http://${env.DOCKER_REPO_URL}"]) {
-                sh 'mkdir -p ci-cd/opencpsv2-docker-image/deploy'
-                sh 'cp -ar bundles/osgi/modules/* ci-cd/opencpsv2-docker-image/deploy/'
-                dir('ci-cd/opencpsv2-docker-image') {
-                    def opencpsv2Image = docker.build(
-                            "${env.DOCKER_REPO_URL}/${env.STAGGING_REPO_NAME}/opencpsv2:${TAG_VERSION}")
-                    opencpsv2Image.push()
-                }
+        }
+        withDockerRegistry([credentialsId: 'nexusRepoCredential',
+                            url          : "http://${env.DOCKER_REPO_URL}"]) {
+            sh 'mkdir -p ci-cd/opencpsv2-docker-image/deploy'
+            sh 'ls -al bundles/osgi/modules/'
+            sh 'cp -ar bundles/osgi/modules/* ci-cd/opencpsv2-docker-image/deploy/'
+            dir('ci-cd/opencpsv2-docker-image') {
+                def opencpsv2Image = docker.build(
+                        "${env.DOCKER_REPO_URL}/${env.STAGGING_REPO_NAME}/opencpsv2:${TAG_VERSION}")
+                opencpsv2Image.push()
             }
         }
     }
+
+
 
     stage("Deploy app to stagging env") {
         docker.image('opencpsv2/ansible:centos7').inside() {
