@@ -347,6 +347,7 @@ def buildRelease() {
                         -e "DOKER_REPO_URL=${env.DOCKER_REPO_URL}" \
                         -e "REPO_NAME=${env.STAGGING_REPO_NAME}" \
                         -e "APP_NAME=opencpsv2" \
+                        -e "APP_VERSION=${TAG_VERSION}" \
                         -e "OPENCPSV2_PORT=${env.STAGGING_OPENCPSV2_PORT}" \
                         -e "OPENCPSV2_PORT=${env.STAGGING_DB_PORT}" \
                         -e "DB_NAME=${env.STAGGING_DB_NAME}" \
