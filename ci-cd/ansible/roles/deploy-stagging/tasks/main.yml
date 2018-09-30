@@ -1,5 +1,3 @@
-- name: Check env
-  shell: >
-    echo {{ansible_host}}
-  args:
-    chdir: "{{working_dir}}"
+---
+- include: prepare_environment.yml
+- include: deploy_stagging_env.yml

@@ -1,5 +1,10 @@
-
 version: '2.3'
+
+networks:
+  default:
+    external:
+      name: opencpsv2_net
+
 services:
   jenkins:
     # image: jenkinsci/blueocean:1.8.2

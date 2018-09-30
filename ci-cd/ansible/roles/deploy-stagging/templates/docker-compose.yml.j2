@@ -1,0 +1,36 @@
+version: '2.3'
+
+networks:
+  default:
+    external:
+      name: opencpsv2_net
+
+services:
+
+  opencpsv2-portal:
+    image: {{ DOKER_REPO_URL }}/{{ REPO_NAME }}/{{ APP_NAME }}:{{ APP_VERSION }}
+    ports:
+    - "{{ OPENCPSV2_PORT }}:8080"
+    links:
+    - "mariadb:database"
+    environment:
+      DATABASE_HOST: mariadb
+      DATABASE_NAME: {{ DB_NAME }}
+      DATABASE_USERNAME: {{ DB_USERNAME }}
+      DATABASE_PASSWORD: {{ DB_PASSWORD }}
+
+  mariadb:
+    build:
+      context: ./mariadb
+      args:
+        MYSQL_ROOT_PASSWORD_INIT: {{ DB_PASSWORD }}
+        MYSQL_DATABASE_INIT: {{ DB_NAME }}
+        MYSQL_USER_INIT: {{ DB_USERNAME }}
+        MYSQL_PASSWORD_INIT: {{ DB_PASSWORD }}
+    environment:
+      MYSQL_ROOT_PASSWORD: {{ DB_PASSWORD }}
+      MYSQL_DATABASE: {{ DB_NAME }}
+      MYSQL_USER: {{ DB_USERNAME }}
+      MYSQL_PASSWORD: {{ DB_PASSWORD }}
+    ports:
+    - "{{ DB_PORT }}:3306"
