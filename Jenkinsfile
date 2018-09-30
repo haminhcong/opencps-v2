@@ -225,9 +225,9 @@ def notifyStarted() {
 // RELEASE_COMMIT_ID RELEASE_BRANCH RELEASE_TITLE RELEASE_NOTE
 def buildRelease() {
     // check input conditions
-    configFileProvider([configFile(fileId: 'release_settings', targetLocation: '.'),
+    configFileProvider([configFile(fileId: "opencpsv2-release-settings", targetLocation: '.'),
                         configFile(fileId: "opencpsv2-stagging-config", targetLocation: '.')]) {
-        load "release_settings"
+        load "opencpsv2-release-settings"
         load "opencpsv2-stagging-config"
 
     }
