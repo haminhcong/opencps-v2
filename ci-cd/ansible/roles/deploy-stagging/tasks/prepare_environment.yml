@@ -29,10 +29,11 @@
   - directory
 
 - name: Install pip
-  easy_install:
-    name: pip
+  apt:
+    pkg: python-pip
+    state: present
   become: True
-
+  
 - name: Install docker SDK for python
   pip:
     name: docker
