@@ -27,3 +27,14 @@
   with_items:
   - absent
   - directory
+
+- name: Install pip
+  easy_install:
+    name: pip
+  become: True
+
+- name: Install docker SDK for python
+  pip:
+    name: docker
+    state: latest
+  become: True
