@@ -289,36 +289,36 @@ def buildRelease() {
         // sonar qube scan (not implemented)
     }
     node {
-        stage('Package & Upload Artifacts') {
-            docker.image('opencpsv2/gradle:4.9.0-jdk8').inside('-v "gradle_cache_volume:/home/gradle/gradle_cache" ') {
-                sh 'gradle --no-daemon  buildService deploy --profile'
-                dir('bundles/osgi') {
-                    sh 'tar -zcvf artifact.tar.gz modules'
-                    sh 'ls -al'
-                    nexusPublisher nexusInstanceId: 'nexusRepo', nexusRepositoryId: 'stagging', packages: [
-                            [$class         : 'MavenPackage',
-                             mavenAssetList : [[classifier: '', extension: 'tar.gz', filePath: 'artifact.tar.gz']],
-                             mavenCoordinate: [groupId: 'opencps', artifactId: 'opencpsv2', packaging: 'tar.gz', version: "${TAG_VERSION}"]
-                            ]]
-                }
-            }
-            withDockerRegistry([credentialsId: 'nexusRepoCredential',
-                                url          : "http://${env.DOCKER_REPO_URL}"]) {
-                sh 'mkdir -p ci-cd/opencpsv2-docker-image/deploy'
-                sh 'ls -al bundles/osgi/modules/'
-                sh 'cp -ar bundles/osgi/modules/* ci-cd/opencpsv2-docker-image/deploy/'
-                dir('ci-cd/opencpsv2-docker-image') {
-                    def opencpsv2Image = docker.build(
-                            "${env.DOCKER_REPO_URL}/${env.STAGGING_REPO_NAME}/opencpsv2:${TAG_VERSION}")
-                    try {
-                        opencpsv2Image.push()
-                    }
-                    finally {
-                        sh "docker rmi ${opencpsv2Image.id}"
-                    }
-                }
-            }
-        }
+//        stage('Package & Upload Artifacts') {
+//            docker.image('opencpsv2/gradle:4.9.0-jdk8').inside('-v "gradle_cache_volume:/home/gradle/gradle_cache" ') {
+//                sh 'gradle --no-daemon  buildService deploy --profile'
+//                dir('bundles/osgi') {
+//                    sh 'tar -zcvf artifact.tar.gz modules'
+//                    sh 'ls -al'
+//                    nexusPublisher nexusInstanceId: 'nexusRepo', nexusRepositoryId: 'stagging', packages: [
+//                            [$class         : 'MavenPackage',
+//                             mavenAssetList : [[classifier: '', extension: 'tar.gz', filePath: 'artifact.tar.gz']],
+//                             mavenCoordinate: [groupId: 'opencps', artifactId: 'opencpsv2', packaging: 'tar.gz', version: "${TAG_VERSION}"]
+//                            ]]
+//                }
+//            }
+//            withDockerRegistry([credentialsId: 'nexusRepoCredential',
+//                                url          : "http://${env.DOCKER_REPO_URL}"]) {
+//                sh 'mkdir -p ci-cd/opencpsv2-docker-image/deploy'
+//                sh 'ls -al bundles/osgi/modules/'
+//                sh 'cp -ar bundles/osgi/modules/* ci-cd/opencpsv2-docker-image/deploy/'
+//                dir('ci-cd/opencpsv2-docker-image') {
+//                    def opencpsv2Image = docker.build(
+//                            "${env.DOCKER_REPO_URL}/${env.STAGGING_REPO_NAME}/opencpsv2:${TAG_VERSION}")
+//                    try {
+//                        opencpsv2Image.push()
+//                    }
+//                    finally {
+//                        sh "docker rmi ${opencpsv2Image.id}"
+//                    }
+//                }
+//            }
+//        }
 
         stage("Deploy app to stagging env") {
             docker.image('opencpsv2/ansible:centos7').inside() {
@@ -326,11 +326,11 @@ def buildRelease() {
                 dir('ci-cd/ansible') {
                     def jenkins_current_dir = pwd()
                     sh """
-                 ansible-playbook -i localhost.ini site.yml --tags "generate-stagging-inventory" \
-                    --extra-vars "stagging_ip=${env.STAGGING_IP}" \
-                    --extra-vars "working_dir=${env.STAGGING_WORKING_DIR}" \
-                    --extra-vars "jenkins_current_dir=${jenkins_current_dir}"
-                """
+                        ansible-playbook -i localhost.ini site.yml --tags "generate-stagging-inventory" \
+                            --extra-vars "stagging_ip=${env.STAGGING_IP}" \
+                            --extra-vars "working_dir=${env.STAGGING_WORKING_DIR}" \
+                            --extra-vars "jenkins_current_dir=${jenkins_current_dir}"
+                    """
                     sh 'cat stagging_inventory.ini'
                     withCredentials([
                             usernamePassword(credentialsId: 'nexusRepoCredential',
@@ -344,21 +344,21 @@ def buildRelease() {
                                     passwordVariable: 'stagging_db_password'),
                     ]) {
                         sh """
-                     ansible-playbook -i stagging_inventory.ini site.yml --tags "deploy-stagging" \
-                        -e "ansible_user=${stagging_username}" \
-                        -e "ansible_ssh_pass=${stagging_password}" \
-                        -e "DOCKER_REPO_URL=${env.DOCKER_REPO_URL}" \
-                        -e "REPO_NAME=${env.STAGGING_REPO_NAME}" \
-                        -e "APP_NAME=opencpsv2" \
-                        -e "APP_VERSION=${TAG_VERSION}" \
-                        -e "OPENCPSV2_PORT=${env.STAGGING_OPENCPSV2_PORT}" \
-                        -e "DB_PORT=${env.STAGGING_DB_PORT}" \
-                        -e "DB_NAME=${env.STAGGING_DB_NAME}" \
-                        -e "DB_USERNAME=${stagging_db_name}" \
-                        -e "DB_PASSWORD=${stagging_db_password}" \
-                        -e "DOCKER_REPO_USERNAME=${nexus_repo_username}" \
-                        -e "DOCKER_REPO_PASSWORD=${nexus_repo_password}" 
-                    """
+                            ansible-playbook -i stagging_inventory.ini site.yml --tags "deploy-stagging" \
+                                -e "ansible_user=${stagging_username}" \
+                                -e "ansible_ssh_pass=${stagging_password}" \
+                                -e "DOCKER_REPO_URL=${env.DOCKER_REPO_URL}" \
+                                -e "REPO_NAME=${env.STAGGING_REPO_NAME}" \
+                                -e "APP_NAME=opencpsv2" \
+                                -e "APP_VERSION=${TAG_VERSION}" \
+                                -e "OPENCPSV2_PORT=${env.STAGGING_OPENCPSV2_PORT}" \
+                                -e "DB_PORT=${env.STAGGING_DB_PORT}" \
+                                -e "DB_NAME=${env.STAGGING_DB_NAME}" \
+                                -e "DB_USERNAME=${stagging_db_name}" \
+                                -e "DB_PASSWORD=${stagging_db_password}" \
+                                -e "DOCKER_REPO_USERNAME=${nexus_repo_username}" \
+                                -e "DOCKER_REPO_PASSWORD=${nexus_repo_password}" 
+                        """
                     }
                 }
             }
