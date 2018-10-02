@@ -369,11 +369,9 @@ def buildRelease() {
                 from: "${env.CI_CD_SYSTEM_EMAIL}",
                 subject: "Release Decision: Stagging Environment for version ${TAG_VERSION} is created",
                 body: """
-                    <p>Stagging Environment for version ${TAG_VERSION} is created at URL http://${env.STAGGING_IP}:${env.STAGGING_DB_PORT}</p>
-                    <p>
-                        Please Select accept deploy this version to production or not at 
-                        <a href="${env.JOB_URL}${BUILD_NUMBER}/display/redirect">${env.JOB_URL}${BUILD_NUMBER}/display/redirect</a>
-                    </p>
+                    Stagging Environment for version ${TAG_VERSION} is created at URL http://${env.STAGGING_IP}:${env.STAGGING_OPENCPSV2_PORT}
+
+                    Please Select accept deploy this version to production or not at URL: ${env.JOB_URL}${BUILD_NUMBER}/display/redirect
                 """,
                 // Update this list by change env variable at Manage Jenkins > Configure System > Global properties
                 to: "${env.PM_EMAIL}"
