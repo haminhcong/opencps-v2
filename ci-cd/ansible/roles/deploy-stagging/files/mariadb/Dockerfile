@@ -14,7 +14,7 @@ ENV MYSQL_DATABASE $MYSQL_DATABASE_INIT
 ENV MYSQL_USER $MYSQL_ROOT_PASSWORD_INIT
 ENV MYSQL_PASSWORD $MYSQL_DATABASE_INIT
 
-COPY opencpsv2_test_data.sql /docker-entrypoint-initdb.d/
+COPY opencpsv2-stagging-database.sql /docker-entrypoint-initdb.d/
 
 # Need to change the datadir to something else that /var/lib/mysql because the parent docker file defines it as a volume.
 # https://docs.docker.com/engine/reference/builder/#volume :
