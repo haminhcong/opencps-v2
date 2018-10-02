@@ -84,3 +84,4 @@ modules/vr-business
 gradle.properties
 **.sql
 **.jar
+!ci-cd/ansible/roles/deploy-stagging/files/mariadb/opencpsv2-stagging-database.sql
