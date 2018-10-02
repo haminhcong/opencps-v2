@@ -4,6 +4,11 @@
     src: docker-compose.yml.j2
     dest: "{{ working_dir }}/docker-compose.yml"
 
+- name: Copy database stagging folder
+  copy:
+    src: mariadb
+    dest: "{{ working_dir}}"
+
 - name: Log into private registry and force re-authorization
   docker_login:
     registry: "http://{{DOCKER_REPO_URL}}"
