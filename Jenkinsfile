@@ -372,7 +372,7 @@ def buildRelease() {
         try {
             timeout(time: 5, unit: 'HOURS') {
                 env.ACCEPT_RELEASE = input message: 'Accept or Reject Release', ok: 'Proceed',
-                        parameters: [choice(name: 'ACCEPT_RELEASE', choices: 'yes\no',
+                        parameters: [choice(name: 'ACCEPT_RELEASE', choices: 'Yes\nNo',
                                 description: 'Do you want to release and deploy this build?')]
 
             }
@@ -386,7 +386,7 @@ def buildRelease() {
         }
     }
 
-    if(env.ACCEPT_RELEASE =="yes"){
+    if(env.ACCEPT_RELEASE =="Yes"){
         echo "Accept Release. Start Release Process."
     }else{
         echo "Reject Release. Exit build"
