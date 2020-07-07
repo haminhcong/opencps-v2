@@ -26,7 +26,11 @@ def buildPushCommit() {
 def checkoutSCM() {
     checkout([
         $class: 'GitSCM',
-        extensions: [[$class: 'CloneOption', timeout: 120]],
+        branches: scm.branches,
+        doGenerateSubmoduleConfigurations: scm.doGenerateSubmoduleConfigurations,
+        extensions       : [[$class : 'CloneOption', shallow: false, timeout: 75],
+                            [$class: 'CleanBeforeCheckout']],
+        userRemoteConfigs: scm.userRemoteConfigs
     ])
     GIT_REVISION = sh(script: 'git rev-parse HEAD', returnStdout: true)
     env.GIT_COMMIT_ID = GIT_REVISION.substring(0, 7)
