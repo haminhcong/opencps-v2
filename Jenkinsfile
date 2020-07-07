@@ -1,4 +1,5 @@
 node(){
+    sh 'ls -al'
     configFileProvider([configFile(fileId: "opencps_ci_cd_config.groovy", targetLocation: '.')]) {
             load "opencps_ci_cd_config.groovy"
     }
