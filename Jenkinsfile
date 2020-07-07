@@ -19,6 +19,7 @@ def buildPushCommit() {
             sh './gradlew -v'
             sh './gradlew buildService'
             sh './gradlew build'
+            sh 'ls -al'
         }
     }
 }
