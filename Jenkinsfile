@@ -15,7 +15,7 @@ def buildPushCommit() {
             checkoutSCM()
         }
         docker.image("openjdk:8u252-jdk").inside("-v ${env.OPENCPS_CACHE_VOLUME}:/root/gradle_cache") {
-            sh 'cp -ar /root/gradle_cache/* /root/.gradle/'
+            sh 'mkdir -p /root/.gradle/ && cp -ar /root/gradle_cache/* /root/.gradle/'
             sh './gradlew -v'
             sh './gradlew buildService'
             sh './gradlew build'
