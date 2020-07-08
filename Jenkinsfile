@@ -1,8 +1,8 @@
-node(){
-    configFileProvider([configFile(fileId: "opencps_ci_cd_config.groovy", targetLocation: '.')]) {
-            load "opencps_ci_cd_config.groovy"
-    }
-}
+// node(){
+//     configFileProvider([configFile(fileId: "opencps_ci_cd_config.groovy", targetLocation: '.')]) {
+//             load "opencps_ci_cd_config.groovy"
+//     }
+// }
 if (env.CHANGE_ID) {
     buildPullRequest()
 } else {
@@ -11,6 +11,7 @@ if (env.CHANGE_ID) {
 
 def buildPushCommit() {
     node() {
+        sh 'ls -alh'
         stage('Checkout Source Code') {
             checkoutSCM()
         }
