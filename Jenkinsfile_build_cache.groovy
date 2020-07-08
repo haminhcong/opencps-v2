@@ -1,7 +1,6 @@
+env.OPENCPS_CACHE_VOLUME='gradle_cache_volume_test'
+
 node {
-    configFileProvider([configFile(fileId: "opencps_ci_cd_config.groovy", targetLocation: '.')]) {
-            load "opencps_ci_cd_config.groovy"
-    }
     stage('Preparation & Checkout') {
         checkout changelog: true, poll: true, scm: [
                 $class           : 'GitSCM',

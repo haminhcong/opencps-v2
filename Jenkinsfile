@@ -1,8 +1,5 @@
-// node(){
-//     configFileProvider([configFile(fileId: "opencps_ci_cd_config.groovy", targetLocation: '.')]) {
-//             load "opencps_ci_cd_config.groovy"
-//     }
-// }
+env.OPENCPS_CACHE_VOLUME='gradle_cache_volume_test'
+
 if (env.CHANGE_ID) {
     buildPullRequest()
 } else {
