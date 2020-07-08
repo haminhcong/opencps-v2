@@ -20,7 +20,17 @@ def buildPushCommit() {
                 sh './gradlew --no-daemon build'
             }
             stage('Test'){
-                sh './gradlew --no-daemon test'
+                try {
+                    sh './gradlew --no-daemon test --profile'
+                } catch (err) {
+                    echo "${err}"
+                    throw err
+                } finally {
+                    junit 'modules/**/TEST-*.xml'
+                    def testResultString = getTestStatuses()
+                    echo "${testResultString}"
+                    pullRequest.comment("${env.GIT_COMMIT_ID}: ${testResultString}. [Details Report...](${env.JOB_URL}${BUILD_NUMBER}/testReport/)")
+                }
             }
         }
     }
@@ -37,4 +47,18 @@ def checkoutSCM() {
     ])
     GIT_REVISION = sh(script: 'git rev-parse HEAD', returnStdout: true)
     env.GIT_COMMIT_ID = GIT_REVISION.substring(0, 7)
+}
+
+@NonCPS
+def getTestStatuses() {
+    def testStatus = ""
+    AbstractTestResultAction testResultAction = currentBuild.rawBuild.getAction(AbstractTestResultAction.class)
+    if (testResultAction != null) {
+        def total = testResultAction.totalCount
+        def failed = testResultAction.failCount
+        def skipped = testResultAction.skipCount
+        def passed = total - failed - skipped
+        testStatus = "Unit Test Results: Passed: ${passed}, Failed: ${failed} ${testResultAction.failureDiffString}, Skipped: ${skipped}"
+    }
+    return testStatus
 }
