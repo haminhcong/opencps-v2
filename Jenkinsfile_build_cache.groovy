@@ -14,8 +14,8 @@ node {
     stage('Update cache') {
         docker.image("openjdk:8u252-jdk").inside("-v ${env.OPENCPS_CACHE_VOLUME}:/root/.gradle") {
             sh './gradlew -v'
-            sh './gradlew buildService'
-            sh './gradlew build'
+            sh './gradlew --no-daemon buildService'
+            sh './gradlew --no-daemon build'
         }
     }
 }

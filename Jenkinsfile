@@ -14,10 +14,14 @@ def buildPushCommit() {
         }
         docker.image("openjdk:8u252-jdk").inside("-v ${env.OPENCPS_CACHE_VOLUME}:/root/gradle_cache") {
             sh 'mkdir -p /root/.gradle/ && cp -ar /root/gradle_cache/* /root/.gradle/'
-            sh './gradlew -v'
-            sh './gradlew buildService'
-            sh './gradlew build'
-            sh 'ls -al'
+            stage('Compile & build'){
+                sh './gradlew -v'
+                sh './gradlew --no-daemon buildService'
+                sh './gradlew --no-daemon build'
+            }
+            stage('Test'){
+                sh './gradlew --no-daemon test'
+            }
         }
     }
 }
