@@ -59,7 +59,7 @@ def cleanBuildTest(){
         stage('Code Coverage Report'){
             sh './gradlew --no-daemon jacocoTestReport jacocoRootReport'
             withCredentials([string(credentialsId: 'codecov-token', variable: 'CODECOV_TOKEN')]) {
-                curl -s https://codecov.io/bash | bash -t ${CODECOV_TOKEN} -f build/reports/jacoco/jacocoRootReport/jacocoRootReport.xml
+                curl -s https://codecov.io/bash | bash -t ${CODECOV_TOKEN}
             }
         }
     }
