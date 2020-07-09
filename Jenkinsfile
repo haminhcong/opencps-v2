@@ -52,7 +52,7 @@ def cleanBuildTest(){
                         ${summary.totalCount}, Failures: ${summary.failCount},
                         Skipped: ${summary.skipCount}, Passed: ${summary.passCount}.
                         [Details Report...](${env.JOB_URL}${BUILD_NUMBER}/testReport/)")
-                    """
+                    """)
                 }
             }
         }
