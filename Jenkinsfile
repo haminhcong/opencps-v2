@@ -45,7 +45,7 @@ def cleanBuildTest(){
                 echo "${err}"
                 throw err
             } finally {
-                def summary = junit testResults 'modules/**/TEST-*.xml'
+                def summary = junit testResults: 'modules/**/TEST-*.xml'
                 if (env.CHANGE_ID) {
                     pullRequest.comment("""
                         ${env.GIT_COMMIT_ID}:  *Test Summary* -
