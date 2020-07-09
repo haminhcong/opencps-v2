@@ -11,28 +11,48 @@ if (env.CHANGE_ID) {
 
 def buildPushCommit() {
     node() {
-        sh 'ls -alh'
         stage('Checkout Source Code') {
             checkoutSCM()
         }
-        docker.image("openjdk:8u252-jdk").inside("-v ${env.OPENCPS_CACHE_VOLUME}:/root/gradle_cache") {
-            sh 'mkdir -p /root/.gradle/ && cp -ar /root/gradle_cache/* /root/.gradle/'
-            stage('Compile & build'){
-                sh './gradlew -v'
-                sh './gradlew --no-daemon buildService'
-                sh './gradlew --no-daemon build'
-            }
-            stage('Test'){
-                try {
-                    sh './gradlew --no-daemon test --profile'
-                } catch (err) {
-                    echo "${err}"
-                    throw err
-                } finally {
-                    junit 'modules/**/TEST-*.xml'
-                    def testResultString = getTestStatuses()
-                    echo "${testResultString}"
-                    pullRequest.comment("${env.GIT_COMMIT_ID}: ${testResultString}. [Details Report...](${env.JOB_URL}${BUILD_NUMBER}/testReport/)")
+        cleanBuildTest()
+
+    }
+}
+
+def buildPullRequest() {
+    node() {
+        stage('Checkout Source Code') {
+            checkoutSCM()
+        }
+        cleanBuildTest()
+
+    }
+}
+
+def cleanBuildTest(){
+    docker.image("openjdk:8u252-jdk").inside("-v ${env.OPENCPS_CACHE_VOLUME}:/root/gradle_cache") {
+        sh 'mkdir -p /root/.gradle/ && cp -ar /root/gradle_cache/* /root/.gradle/'
+        stage('Compile & build'){
+            sh './gradlew -v'
+            sh './gradlew --no-daemon clean'
+            sh './gradlew --no-daemon buildService'
+            sh './gradlew --no-daemon build'
+        }
+        stage('Test'){
+            try {
+                sh './gradlew --no-daemon test --profile'
+            } catch (err) {
+                echo "${err}"
+                throw err
+            } finally {
+                def summary = junit testResults 'modules/**/TEST-*.xml'
+                if (env.CHANGE_ID) {
+                    pullRequest.comment("""
+                        ${env.GIT_COMMIT_ID}:  *Test Summary* -
+                        ${summary.totalCount}, Failures: ${summary.failCount},
+                        Skipped: ${summary.skipCount}, Passed: ${summary.passCount}.
+                        [Details Report...](${env.JOB_URL}${BUILD_NUMBER}/testReport/)")
+                    """
                 }
             }
         }
@@ -50,18 +70,4 @@ def checkoutSCM() {
     ])
     GIT_REVISION = sh(script: 'git rev-parse HEAD', returnStdout: true)
     env.GIT_COMMIT_ID = GIT_REVISION.substring(0, 7)
-}
-
-@NonCPS
-def getTestStatuses() {
-    def testStatus = ""
-    AbstractTestResultAction testResultAction = currentBuild.rawBuild.getAction(AbstractTestResultAction.class)
-    if (testResultAction != null) {
-        def total = testResultAction.totalCount
-        def failed = testResultAction.failCount
-        def skipped = testResultAction.skipCount
-        def passed = total - failed - skipped
-        testStatus = "Unit Test Results: Passed: ${passed}, Failed: ${failed} ${testResultAction.failureDiffString}, Skipped: ${skipped}"
-    }
-    return testStatus
 }
