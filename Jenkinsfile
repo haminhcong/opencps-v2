@@ -1,6 +1,3 @@
-import groovy.json.JsonSlurperClassic
-import hudson.tasks.test.AbstractTestResultAction
-
 env.OPENCPS_CACHE_VOLUME='gradle_cache_volume_test'
 
 if (env.CHANGE_ID) {

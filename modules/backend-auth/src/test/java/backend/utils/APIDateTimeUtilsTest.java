@@ -16,5 +16,4 @@ public class APIDateTimeUtilsTest {
         String outputDateString = APIDateTimeUtils.timeZone2Lucene("20180822142266");
         Assert.assertEquals(outputDateString, "26090704075542");
     }
-
 }
