@@ -47,12 +47,12 @@ def cleanBuildTest(){
             } finally {
                 def summary = junit testResults: 'modules/**/TEST-*.xml'
                 if (env.CHANGE_ID) {
-                    pullRequest.comment("""
-                        ${env.GIT_COMMIT_ID}:  *Test Summary* -
-                        ${summary.totalCount}, Failures: ${summary.failCount},
-                        Skipped: ${summary.skipCount}, Passed: ${summary.passCount}.
-                        [Details Report...](${env.JOB_URL}${BUILD_NUMBER}/testReport/)")
-                    """)
+                    pullRequest.comment(
+                        "${env.GIT_COMMIT_ID}:  *Test Summary* - " +
+                        "Total: ${summary.totalCount}, Failures: ${summary.failCount}, " +
+                        "Skipped: ${summary.skipCount}, Passed: ${summary.passCount}. " +
+                        "[Details Report...](${env.JOB_URL}${BUILD_NUMBER}/testReport/)"
+                    )
                 }
             }
         }
